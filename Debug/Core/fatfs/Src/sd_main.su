@@ -1,0 +1,8 @@
+../Core/fatfs/Src/sd_main.c:26:13:Error	8	static
+../Core/fatfs/Src/sd_main.c:31:9:SPIx_WriteRead	32	static
+../Core/fatfs/Src/sd_main.c:41:6:SPI_SendByte	16	static
+../Core/fatfs/Src/sd_main.c:46:9:SPI_ReceiveByte	16	static
+../Core/fatfs/Src/sd_main.c:52:6:SPI_Release	8	static
+../Core/fatfs/Src/sd_main.c:57:16:SD_cmd	24	static
+../Core/fatfs/Src/sd_main.c:93:6:SD_PowerOn	4	static
+../Core/fatfs/Src/sd_main.c:99:9:sd_ini	40	static

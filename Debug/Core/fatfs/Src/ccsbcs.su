@@ -1,0 +1,2 @@
+../Core/fatfs/Src/ccsbcs.c:502:7:ff_convert	24	static
+../Core/fatfs/Src/ccsbcs.c:529:7:ff_wtoupper	24	static

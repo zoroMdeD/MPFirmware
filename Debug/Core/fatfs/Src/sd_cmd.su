@@ -1,0 +1,9 @@
+../Core/fatfs/Src/sd_cmd.c:28:6:my_init_card	8	static
+../Core/fatfs/Src/sd_cmd.c:34:6:my_read_file	96	static
+../Core/fatfs/Src/sd_cmd.c:88:6:my_write_file_json	80	static
+../Core/fatfs/Src/sd_cmd.c:167:6:fl_close	8	static
+../Core/fatfs/Src/sd_cmd.c:174:6:str2hexStr	24	static
+../Core/fatfs/Src/sd_cmd.c:189:6:save_dido	48	static
+../Core/fatfs/Src/sd_cmd.c:201:6:save_aido	48	static
+../Core/fatfs/Src/sd_cmd.c:213:6:save_pwm	48	static
+../Core/fatfs/Src/sd_cmd.c:225:6:save_tsido	48	static
