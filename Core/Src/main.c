@@ -56,13 +56,17 @@ bool LEFT_NUM_DOWN = false;			//Флаг нажатия кнопки "Целые
 bool RIGHT_NUM = false;				//Флаг нажатия кнопки "Десятые+"
 bool info = true;					//Флаг отображения главного меню
 uint8_t time = 0;					//Переменная задержки
+uint16_t What_Time = 0;
+bool display_Off = false;
 double Current = 0.0;
 //-------------------------------------------
 //-----------------ADC-----------------------
 double Amps[3] = {0,};				//Значение тока на фазах (среднее значение)
 volatile uint32_t adc[3] = {0,}; 	//Массив для хранения данных АЦП
 double adcValue[3] = {0,};			//Массив для хранения обработанных данных АЦП
+double reserve_Current = 0.0;
 uint8_t cnt = 0;					//Счетчик кол-ва измеренных значений тока
+bool run_Сomparison = false;
 //-------------------------------------------
 //----------------FATfs----------------------
 FATFS FATFS_Obj;					//�?нициализация структуры описывающей инициализацию файловой системы
@@ -148,9 +152,22 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-//	  display_info();
-//	  Сurrent_Сomparison();
-//	  DEBUG_main();
+	  display_info();
+	  Сurrent_Сomparison();
+	  DEBUG_main();
+
+//  	Amps[0] = adcValue[0];
+//  	Amps[1] = adcValue[1];
+//  	Amps[2] = adcValue[2];
+//  	if(run_process)
+//	{
+//  		adcValue[0] = 0.0;
+//  		adcValue[1] = 0.0;
+//  		adcValue[2] = 0.0;
+//		snprintf(trans_str, 63, "%.2fA\n", Amps[0]);
+//		SEND_str(trans_str);
+//		run_process = false;
+//	}
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -239,26 +256,48 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 }
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
-    if(hadc->Instance == ADC1)
+    if(hadc->Instance == ADC1)	//Убрать все из колбека
     {
+    	What_Time++;
     	cnt++;
     	adcValue[0] += Conversion_ADC1((uint16_t)adc[0]);
         adcValue[1] += Conversion_ADC1((uint16_t)adc[1]);
         adcValue[2] += Conversion_ADC1((uint16_t)adc[2]);
-        if(cnt == 20)
+//        if(cnt == 20)
+//        {
+//        	Amps[0] = adcValue[0]/20;
+//        	Amps[1] = adcValue[1]/20;
+//        	Amps[2] = adcValue[2]/20;
+//
+//        	cnt = 0;
+//        	run_process = true;
+//        }
+        if(What_Time == 12000)
         {
-        	Amps[0] = adcValue[0]/20;
-        	Amps[1] = adcValue[1]/20;
-        	Amps[2] = adcValue[2]/20;
-        	adcValue[0] = 0.0;
-        	adcValue[1] = 0.0;
-        	adcValue[2] = 0.0;
-    		snprintf(trans_str, 63, "%.2fA\n", Amps[0]);
-    		SEND_str(trans_str);
-        	cnt = 0;
+        	display_Off = true;
+        	What_Time = 0;
         }
     }
 }
+//void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+//{
+//	if(htim->Instance == TIM1) //check if the interrupt comes from TIM1
+//    {
+//		What_Time++;
+//
+//		if(What_Time == 300)	//Каждые 3 секунды
+//        {
+//        	//Тушим экран по истечении времени
+//			if(Number_Menu > 1)
+//			{
+//				What_Time = 0;
+//			}
+//			else
+//				__NOP();
+//			What_Time = 0;
+//        }
+//    }
+//}
 /* USER CODE END 4 */
 
 /**

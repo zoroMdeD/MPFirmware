@@ -10,6 +10,10 @@ extern double adcValue[];
 extern double Current;
 extern double Amps[];
 extern bool Stop;
+extern uint8_t cnt;
+extern bool run_Сomparison;
+extern char trans_str[];
+extern double reserve_Current;
 
 //Функция преобразования данных АЦП
 //Принимает "ADC_value" - значение АЦП
@@ -32,6 +36,23 @@ double Conversion_ADC1(uint16_t ADC_value)
 //Функция сравнения значения тока уставки с действующими значениями тока на фазах
 void Сurrent_Сomparison(void)
 {
-	double reserve_Current = Current * 1.20;	//Если значение тока превысило уставку на 20%
-	(Amps[0] > reserve_Current || Amps[1] > reserve_Current || Amps[2] > reserve_Current) ? (Stop = true) : (Stop = false);
+    if(cnt == 10)
+    {
+    	run_Сomparison = true;
+
+    	Amps[0] = adcValue[0]/10;
+    	Amps[1] = adcValue[1]/10;
+    	Amps[2] = adcValue[2]/10;
+
+      	adcValue[0] = 0.0;
+      	adcValue[1] = 0.0;
+      	adcValue[2] = 0.0;
+//    	snprintf(trans_str, 63, "%.2fA\n", Amps[0]);
+//    	SEND_str(trans_str);
+
+    	cnt = 0;
+    }
+
+    if(run_Сomparison)
+    	(Amps[0] > reserve_Current || Amps[1] > reserve_Current || Amps[2] > reserve_Current) ? (Stop = true) : (Stop = false);
 }
