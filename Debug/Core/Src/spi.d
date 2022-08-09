@@ -32,7 +32,8 @@ Core/Src/spi.o: ../Core/Src/spi.c ../Core/Inc/spi.h ../Core/Inc/main.h \
  ../Core/Inc/tim.h ../Core/Inc/usart.h ../Core/Inc/gpio.h \
  ../Core/Inc/com.h ../Core/Inc/usart_ring.h \
  ../Core/Inc/../periphery_io/Inc/data_process.h ../Core/Inc/main.h \
- ../Core/Inc/../JSON/Inc/cJSON.h ../Core/Inc/../JSON/Inc/input_JSON.h \
+ ../Core/Inc/../periphery_io/Inc/cmd.h ../Core/Inc/../JSON/Inc/cJSON.h \
+ ../Core/Inc/../JSON/Inc/input_JSON.h \
  ../Core/Inc/../JSON/Inc/create_JSON.h ../Core/Inc/../led/Inc/ssd1306.h \
  ../Core/Inc/../led/Inc/fonts.h ../Core/Inc/../led/Inc/fonts.h \
  ../Core/Inc/../led/Inc/led.h ../Core/Inc/../../Core/fatfs/Inc/sd_cmd.h \
@@ -84,6 +85,7 @@ Core/Src/spi.o: ../Core/Src/spi.c ../Core/Inc/spi.h ../Core/Inc/main.h \
 ../Core/Inc/usart_ring.h:
 ../Core/Inc/../periphery_io/Inc/data_process.h:
 ../Core/Inc/main.h:
+../Core/Inc/../periphery_io/Inc/cmd.h:
 ../Core/Inc/../JSON/Inc/cJSON.h:
 ../Core/Inc/../JSON/Inc/input_JSON.h:
 ../Core/Inc/../JSON/Inc/create_JSON.h:

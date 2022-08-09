@@ -23,7 +23,7 @@ extern bool display_Off;
 
 bool display_Sleep = false;
 
-void display_info(void)
+void Display_info(void)
 {
 	if(info || display_Off)
 	{

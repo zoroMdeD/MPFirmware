@@ -45,6 +45,7 @@ extern "C" {
 #include "com.h"
 #include "usart_ring.h"
 #include "../periphery_io/Inc/data_process.h"
+#include "../periphery_io/Inc/cmd.h"
 #include "../JSON/Inc/cJSON.h"
 #include "../JSON/Inc/input_JSON.h"
 #include "../JSON/Inc/create_JSON.h"
@@ -61,6 +62,22 @@ extern "C" {
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
+
+	/*
+	 * <<Phase(A)>>
+	 * htim2 -> TIM_CHANNEL_1 = Phase Impulse Modulation phase A forward	-	(AFWD) 			-	PA15
+	 * htim2 -> TIM_CHANNEL_4 = Phase Impulse Modulation phase A reverse	-	(AREV)			-	PA3
+	 * Trigger Source = Zero crossing phase A 								-	(A_ZeroCross)	-	PB3
+	 *
+	 * <<Phase(B)>>
+	 * htim3 -> TIM_CHANNEL_1 = Phase Impulse Modulation phase B forward	-	(BFWD) 			-	PB4
+	 * Trigger Source = Zero crossing phase B 								-	(B_ZeroCross)	-	PB5
+	 *
+	 * <<Phase(C)>>
+	 * htim4 -> TIM_CHANNEL_1 = Phase Impulse Modulation phase C forward	-	(CFWD) 			-	PB6
+	 * htim4 -> TIM_CHANNEL_4 = Phase Impulse Modulation phase C reverse	-	(CREV)			-	PB9
+	 * Trigger Source = Zero crossing phase C 								-	(C_ZeroCross)	-	PB7
+	 */
 
 /* USER CODE END ET */
 

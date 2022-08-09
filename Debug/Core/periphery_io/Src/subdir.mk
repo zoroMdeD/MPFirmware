@@ -5,12 +5,15 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
+../Core/periphery_io/Src/cmd.c \
 ../Core/periphery_io/Src/data_process.c 
 
 OBJS += \
+./Core/periphery_io/Src/cmd.o \
 ./Core/periphery_io/Src/data_process.o 
 
 C_DEPS += \
+./Core/periphery_io/Src/cmd.d \
 ./Core/periphery_io/Src/data_process.d 
 
 
@@ -21,7 +24,7 @@ Core/periphery_io/Src/%.o Core/periphery_io/Src/%.su: ../Core/periphery_io/Src/%
 clean: clean-Core-2f-periphery_io-2f-Src
 
 clean-Core-2f-periphery_io-2f-Src:
-	-$(RM) ./Core/periphery_io/Src/data_process.d ./Core/periphery_io/Src/data_process.o ./Core/periphery_io/Src/data_process.su
+	-$(RM) ./Core/periphery_io/Src/cmd.d ./Core/periphery_io/Src/cmd.o ./Core/periphery_io/Src/cmd.su ./Core/periphery_io/Src/data_process.d ./Core/periphery_io/Src/data_process.o ./Core/periphery_io/Src/data_process.su
 
 .PHONY: clean-Core-2f-periphery_io-2f-Src
 

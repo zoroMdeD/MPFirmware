@@ -1,4 +1,5 @@
-Core/Src/com.o: ../Core/Src/com.c ../Core/Inc/com.h ../Core/Inc/main.h \
+Core/periphery_io/Src/cmd.o: ../Core/periphery_io/Src/cmd.c \
+ ../Core/Inc/../periphery_io/Inc/cmd.h ../Core/Inc/main.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h \
  ../Core/Inc/stm32f1xx_hal_conf.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc.h \
@@ -28,10 +29,10 @@ Core/Src/com.o: ../Core/Src/com.c ../Core/Inc/com.h ../Core/Inc/main.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h \
- ../Core/Inc/adc.h ../Core/Inc/dma.h ../Core/Inc/i2c.h ../Core/Inc/spi.h \
- ../Core/Inc/tim.h ../Core/Inc/usart.h ../Core/Inc/gpio.h \
- ../Core/Inc/com.h ../Core/Inc/usart_ring.h \
- ../Core/Inc/../periphery_io/Inc/data_process.h ../Core/Inc/main.h \
+ ../Core/Inc/adc.h ../Core/Inc/main.h ../Core/Inc/dma.h ../Core/Inc/i2c.h \
+ ../Core/Inc/spi.h ../Core/Inc/tim.h ../Core/Inc/usart.h \
+ ../Core/Inc/gpio.h ../Core/Inc/com.h ../Core/Inc/usart_ring.h \
+ ../Core/Inc/../periphery_io/Inc/data_process.h \
  ../Core/Inc/../periphery_io/Inc/cmd.h ../Core/Inc/../JSON/Inc/cJSON.h \
  ../Core/Inc/../JSON/Inc/input_JSON.h \
  ../Core/Inc/../JSON/Inc/create_JSON.h ../Core/Inc/../led/Inc/ssd1306.h \
@@ -43,7 +44,7 @@ Core/Src/com.o: ../Core/Src/com.c ../Core/Inc/com.h ../Core/Inc/main.h \
  ../Core/Inc/../../Core/fatfs/Inc/ff.h \
  ../Core/Inc/../../Core/fatfs/Inc/ffconf.h \
  ../Core/Inc/../fatfs/Inc/sd_main.h ../Core/Inc/../Inc/main.h
-../Core/Inc/com.h:
+../Core/Inc/../periphery_io/Inc/cmd.h:
 ../Core/Inc/main.h:
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h:
 ../Core/Inc/stm32f1xx_hal_conf.h:
@@ -75,6 +76,7 @@ Core/Src/com.o: ../Core/Src/com.c ../Core/Inc/com.h ../Core/Inc/main.h \
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h:
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h:
 ../Core/Inc/adc.h:
+../Core/Inc/main.h:
 ../Core/Inc/dma.h:
 ../Core/Inc/i2c.h:
 ../Core/Inc/spi.h:
@@ -84,7 +86,6 @@ Core/Src/com.o: ../Core/Src/com.c ../Core/Inc/com.h ../Core/Inc/main.h \
 ../Core/Inc/com.h:
 ../Core/Inc/usart_ring.h:
 ../Core/Inc/../periphery_io/Inc/data_process.h:
-../Core/Inc/main.h:
 ../Core/Inc/../periphery_io/Inc/cmd.h:
 ../Core/Inc/../JSON/Inc/cJSON.h:
 ../Core/Inc/../JSON/Inc/input_JSON.h:

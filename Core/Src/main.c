@@ -50,6 +50,13 @@
 /* USER CODE BEGIN PV */
 char trans_str[64] = {0,};
 bool Stop = false;					//Флаг остановки Эл.привода
+
+//-----------------CMD-----------------------
+bool flag_OPENmcu = false;			//Флаг прихода команды Открыть задвижку
+bool flag_CLOSEmcu = false;			//Флаг прихода команды Закрыть задвижку
+bool DirMove_OPENmcu = false;		//Флаг движения задвижки на открытие
+bool DirMove_CLOSEmcu = false;		//Флаг движения задвижки на закрытие
+//-------------------------------------------
 //-----------------LCD-----------------------
 bool LEFT_NUM_UP = false;			//Флаг нажатия кнопки "Целые+"
 bool LEFT_NUM_DOWN = false;			//Флаг нажатия кнопки "Целые-"
@@ -145,31 +152,16 @@ int main(void)
 	my_init_card();
 	SEND_str("Init sd card -> success\n");
 	//------------------------------------------
-
-
-	  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  display_info();
+	  Display_info();
 	  Сurrent_Сomparison();
 	  DEBUG_main();
 
-//  	Amps[0] = adcValue[0];
-//  	Amps[1] = adcValue[1];
-//  	Amps[2] = adcValue[2];
-//  	if(run_process)
-//	{
-//  		adcValue[0] = 0.0;
-//  		adcValue[1] = 0.0;
-//  		adcValue[2] = 0.0;
-//		snprintf(trans_str, 63, "%.2fA\n", Amps[0]);
-//		SEND_str(trans_str);
-//		run_process = false;
-//	}
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -226,9 +218,10 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
+	//----------------------------------Button handler----------------------------------
 	if (GPIO_Pin == GPIO_PIN_0)
 	{
-		if((GPIOB->IDR & GPIO_PIN_0) == 0)
+		if((GPIOB->IDR & GPIO_PIN_0) == 0) //Push left button
 		{
 			if((GPIOB->IDR & GPIO_PIN_0) == 0)
 				LEFT_NUM_DOWN = true;
@@ -236,7 +229,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	}
 	else if (GPIO_Pin == GPIO_PIN_1)
 	{
-		if((GPIOB->IDR & GPIO_PIN_1) == 0)
+		if((GPIOB->IDR & GPIO_PIN_1) == 0) //Push middle button
 		{
 			if((GPIOB->IDR & GPIO_PIN_1) == 0)
 				LEFT_NUM_UP = true;
@@ -244,17 +237,78 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	}
 	else if (GPIO_Pin == GPIO_PIN_2)
 	{
-		if((GPIOB->IDR & GPIO_PIN_2) == 0)
+		if((GPIOB->IDR & GPIO_PIN_2) == 0) //Push right button
 		{
 			if((GPIOB->IDR & GPIO_PIN_2) == 0)
 				RIGHT_NUM = true;
 		}
 	}
+	//----------------------------------------------------------------------------------
+	//-------------------------------ZeroCrossing handler-------------------------------
+	else if (GPIO_Pin == GPIO_PIN_3)
+	{
+		if((GPIOB->IDR & GPIO_PIN_3) == 0) //Phase A ZeroCrossing
+		{
+			if(DirMove_OPENmcu)
+			{
+				HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);	//Stop timer two channel one	(AFWD)
+				HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);	//Run timer two channel one		(AFWD)
+			}
+			else if(DirMove_CLOSEmcu)
+			{
+				HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_4);	//Stop timer two channel four	(AREV)
+				HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);	//Run timer two channel four	(AREV)
+			}
+		}
+	}
+	else if (GPIO_Pin == GPIO_PIN_5)
+	{
+		if((GPIOB->IDR & GPIO_PIN_5) == 0) //Phase B ZeroCrossing
+		{
+			if(DirMove_OPENmcu || DirMove_CLOSEmcu)
+			{
+				HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);	//Stop timer three channel one	(BFWD)
+				HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);	//Run timer three channel one	(BFWD)
+			}
+		}
+	}
+	else if (GPIO_Pin == GPIO_PIN_7)
+	{
+		if((GPIOB->IDR & GPIO_PIN_7) == 0) //Phase C ZeroCrossing
+		{
+			if(DirMove_OPENmcu)
+			{
+				HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_1);	//Stop timer Four channel one	(CFWD)
+				HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);	//Run timer four channel one	(CFWD)
+			}
+			else if(DirMove_CLOSEmcu)
+			{
+				HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_4);	//Stop timer four channel four	(CREV)
+				HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_4);	//Run timer four channel four	(CREV)
+			}
+		}
+	}
+	//----------------------------------------------------------------------------------
+	//-----------------------------------CMD handler------------------------------------
+	else if (GPIO_Pin == GPIO_PIN_12)
+	{
+		if((GPIOA->IDR & GPIO_PIN_12) == 0) //Received command "OPENmcu"
+		{
+			flag_OPENmcu = true;
+		}
+	}
+	else if (GPIO_Pin == GPIO_PIN_11)
+	{
+		if((GPIOA->IDR & GPIO_PIN_11) == 0) //Received command "CLOSEmcu"
+		{
+			flag_CLOSEmcu = true;
+		}
+	}
+	//----------------------------------------------------------------------------------
 	else
 	{
 		__NOP();
 	}
-//	What_Time = 0;
 }
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
@@ -265,15 +319,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
     	adcValue[0] += Conversion_ADC1((uint16_t)adc[0]);
         adcValue[1] += Conversion_ADC1((uint16_t)adc[1]);
         adcValue[2] += Conversion_ADC1((uint16_t)adc[2]);
-//        if(cnt == 20)
-//        {
-//        	Amps[0] = adcValue[0]/20;
-//        	Amps[1] = adcValue[1]/20;
-//        	Amps[2] = adcValue[2]/20;
-//
-//        	cnt = 0;
-//        	run_process = true;
-//        }
+
         if(What_Time == 12000)
         {
         	display_Off = true;
@@ -281,25 +327,6 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
         }
     }
 }
-//void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-//{
-//	if(htim->Instance == TIM1) //check if the interrupt comes from TIM1
-//    {
-//		What_Time++;
-//
-//		if(What_Time == 300)	//Каждые 3 секунды
-//        {
-//        	//Тушим экран по истечении времени
-//			if(Number_Menu > 1)
-//			{
-//				What_Time = 0;
-//			}
-//			else
-//				__NOP();
-//			What_Time = 0;
-//        }
-//    }
-//}
 /* USER CODE END 4 */
 
 /**

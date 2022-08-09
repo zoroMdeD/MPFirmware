@@ -35,6 +35,7 @@ Core/fatfs/Src/sd_main.o: ../Core/fatfs/Src/sd_main.c \
  ../Core/Inc/../Inc/usart.h ../Core/Inc/../Inc/gpio.h \
  ../Core/Inc/../Inc/com.h ../Core/Inc/../Inc/usart_ring.h \
  ../Core/Inc/../Inc/../periphery_io/Inc/data_process.h ../Core/Inc/main.h \
+ ../Core/Inc/../Inc/../periphery_io/Inc/cmd.h \
  ../Core/Inc/../Inc/../JSON/Inc/cJSON.h \
  ../Core/Inc/../Inc/../JSON/Inc/input_JSON.h \
  ../Core/Inc/../Inc/../JSON/Inc/create_JSON.h \
@@ -92,6 +93,7 @@ Core/fatfs/Src/sd_main.o: ../Core/fatfs/Src/sd_main.c \
 ../Core/Inc/../Inc/usart_ring.h:
 ../Core/Inc/../Inc/../periphery_io/Inc/data_process.h:
 ../Core/Inc/main.h:
+../Core/Inc/../Inc/../periphery_io/Inc/cmd.h:
 ../Core/Inc/../Inc/../JSON/Inc/cJSON.h:
 ../Core/Inc/../Inc/../JSON/Inc/input_JSON.h:
 ../Core/Inc/../Inc/../JSON/Inc/create_JSON.h:
