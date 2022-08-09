@@ -146,6 +146,8 @@ int main(void)
 	SEND_str("Init sd card -> success\n");
 	//------------------------------------------
 
+
+	  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
