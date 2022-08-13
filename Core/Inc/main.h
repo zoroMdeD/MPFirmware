@@ -101,14 +101,22 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define distCLOSE_Pin GPIO_PIN_13
 #define distCLOSE_GPIO_Port GPIOC
+#define distCLOSE_EXTI_IRQn EXTI15_10_IRQn
 #define distSTOP_Pin GPIO_PIN_14
 #define distSTOP_GPIO_Port GPIOC
+#define distSTOP_EXTI_IRQn EXTI15_10_IRQn
 #define distINT_Pin GPIO_PIN_15
 #define distINT_GPIO_Port GPIOC
+#define distINT_EXTI_IRQn EXTI15_10_IRQn
+#define distHIGHP_Pin GPIO_PIN_0
+#define distHIGHP_GPIO_Port GPIOC
+#define distHIGHP_EXTI_IRQn EXTI0_IRQn
 #define handOPEN_Pin GPIO_PIN_1
 #define handOPEN_GPIO_Port GPIOC
+#define handOPEN_EXTI_IRQn EXTI1_IRQn
 #define handCLOSE_Pin GPIO_PIN_2
 #define handCLOSE_GPIO_Port GPIOC
+#define handCLOSE_EXTI_IRQn EXTI2_IRQn
 #define handCTRL_Pin GPIO_PIN_3
 #define handCTRL_GPIO_Port GPIOC
 #define A_Current_Pin GPIO_PIN_0
@@ -131,13 +139,10 @@ void Error_Handler(void);
 #define CD_GPIO_Port GPIOC
 #define BT1_Pin GPIO_PIN_0
 #define BT1_GPIO_Port GPIOB
-#define BT1_EXTI_IRQn EXTI0_IRQn
 #define BT2_Pin GPIO_PIN_1
 #define BT2_GPIO_Port GPIOB
-#define BT2_EXTI_IRQn EXTI1_IRQn
 #define BT3_Pin GPIO_PIN_2
 #define BT3_GPIO_Port GPIOB
-#define BT3_EXTI_IRQn EXTI2_IRQn
 #define SCL_Pin GPIO_PIN_10
 #define SCL_GPIO_Port GPIOB
 #define SDA_Pin GPIO_PIN_11
@@ -166,8 +171,10 @@ void Error_Handler(void);
 #define RxD_GPIO_Port GPIOA
 #define CLOSEmcu_Pin GPIO_PIN_11
 #define CLOSEmcu_GPIO_Port GPIOA
+#define CLOSEmcu_EXTI_IRQn EXTI15_10_IRQn
 #define OPENmcu_Pin GPIO_PIN_12
 #define OPENmcu_GPIO_Port GPIOA
+#define OPENmcu_EXTI_IRQn EXTI15_10_IRQn
 #define AFWD_Pin GPIO_PIN_15
 #define AFWD_GPIO_Port GPIOA
 #define WIRE_TxD_Pin GPIO_PIN_10
