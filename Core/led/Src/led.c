@@ -107,7 +107,7 @@ void Display_info(void)
 			  	ssd1306_Fill(Black);
 			  	ssd1306_UpdateScreen(&hi2c2);
 
-			  	reserve_Current = Current * 1.20;	//Уставка по току плюс 20%
+			  	reserve_Current = Current * 1.25;	//Уставка по току плюс 25%
 			  	//Вызвать функцию сохранения уставки по току!!!
 
 			  	SEND_str("-------------------------\n");

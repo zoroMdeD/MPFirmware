@@ -158,7 +158,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  Display_info();
+	  Display_info();	//Доделать чтобы не заходил повторно!!!
 	  Сurrent_Сomparison();
 	  DEBUG_main();
 
@@ -321,7 +321,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
         adcValue[1] += Conversion_ADC1((uint16_t)adc[1]);
         adcValue[2] += Conversion_ADC1((uint16_t)adc[2]);
 
-        if(What_Time == 12000)
+        if(What_Time == 12000)	//Через 2 минуты отключаем дисплей
         {
         	display_Off = true;
         	What_Time = 0;

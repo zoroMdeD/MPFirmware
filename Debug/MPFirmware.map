@@ -3807,8 +3807,8 @@ Discarded input sections
  .data          0x0000000000000000        0x0 ./Core/periphery_io/Src/cmd.o
  .bss           0x0000000000000000        0x0 ./Core/periphery_io/Src/cmd.o
  .text.Direction_Move
-                0x0000000000000000       0xbc ./Core/periphery_io/Src/cmd.o
- .debug_info    0x0000000000000000      0x6f4 ./Core/periphery_io/Src/cmd.o
+                0x0000000000000000       0xf8 ./Core/periphery_io/Src/cmd.o
+ .debug_info    0x0000000000000000      0x700 ./Core/periphery_io/Src/cmd.o
  .debug_abbrev  0x0000000000000000      0x159 ./Core/periphery_io/Src/cmd.o
  .debug_aranges
                 0x0000000000000000       0x20 ./Core/periphery_io/Src/cmd.o
@@ -3898,8 +3898,8 @@ Discarded input sections
  .debug_macro   0x0000000000000000       0x4c ./Core/periphery_io/Src/cmd.o
  .debug_macro   0x0000000000000000       0x46 ./Core/periphery_io/Src/cmd.o
  .debug_macro   0x0000000000000000      0x275 ./Core/periphery_io/Src/cmd.o
- .debug_line    0x0000000000000000      0xb37 ./Core/periphery_io/Src/cmd.o
- .debug_str     0x0000000000000000    0x90372 ./Core/periphery_io/Src/cmd.o
+ .debug_line    0x0000000000000000      0xb4f ./Core/periphery_io/Src/cmd.o
+ .debug_str     0x0000000000000000    0x90377 ./Core/periphery_io/Src/cmd.o
  .comment       0x0000000000000000       0x51 ./Core/periphery_io/Src/cmd.o
  .debug_frame   0x0000000000000000       0x2c ./Core/periphery_io/Src/cmd.o
  .ARM.attributes

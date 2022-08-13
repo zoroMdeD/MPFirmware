@@ -10,11 +10,12 @@ extern bool flag_OPENmcu;
 extern bool flag_CLOSEmcu;
 extern bool DirMove_OPENmcu;
 extern bool DirMove_CLOSEmcu;
+extern bool Stop;
 
 //Функция запуска направления движения задвижки ОТКР/ЗАКР
 void Direction_Move(void)
 {
-	if(flag_OPENmcu)
+	if(flag_OPENmcu)	//Открытие задвижки
 	{
 		DirMove_CLOSEmcu = false;
 
@@ -29,7 +30,7 @@ void Direction_Move(void)
 		DirMove_OPENmcu = true;
 		flag_OPENmcu = false;
 	}
-	else if(flag_CLOSEmcu)
+	else if(flag_CLOSEmcu)	//Закрытие задвижки
 	{
 		DirMove_OPENmcu = false;
 
@@ -43,5 +44,17 @@ void Direction_Move(void)
 
 		DirMove_CLOSEmcu = true;
 		flag_CLOSEmcu = false;
+	}
+	else if(Stop)	//Останавливаем привод
+	{
+		HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);	//Stop timer two channel one	(AFWD)
+		HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_4);	//Stop timer two channel four	(AREV)
+
+		HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);	//Stop timer three channel one	(BFWD)
+
+		HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_1);	//Stop timer Four channel one	(CFWD)
+		HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_4);	//Stop timer four channel four	(CREV)
+
+		Stop = false;
 	}
 }
