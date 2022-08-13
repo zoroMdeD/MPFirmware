@@ -49,8 +49,11 @@
 
 /* USER CODE BEGIN PV */
 char trans_str[64] = {0,};
-bool Stop = false;					//Флаг остановки Эл.привода
-
+bool Stop = false;					//Флаг остановки эл.привода
+bool Forward = false;				//Флаг начала движения эл.привода вперед(открытие)
+bool Reverse = false;				//Флаг начала движения эл.привода назад(закрытие)
+bool Interface = false;				//Флаг передачи управления эл.приводом внешним интерфейсам(ProfiBus, ModBus, CurrentLoop, etc)
+bool HighPriority = false;			//Флаг нажатия кнопки высшего приоритета на дистанционном пульту
 //-----------------CMD-----------------------
 bool flag_OPENmcu = false;			//Флаг прихода команды Открыть задвижку
 bool flag_CLOSEmcu = false;			//Флаг прихода команды Закрыть задвижку
@@ -218,32 +221,67 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-	//----------------------------------Button handler----------------------------------
 	if (GPIO_Pin == GPIO_PIN_0)
 	{
-		if((GPIOB->IDR & GPIO_PIN_0) == 0) //Push left button
+		if((GPIOB->IDR & GPIO_PIN_0) == 0) //Нажатие на левую кнопку
 		{
-			if((GPIOB->IDR & GPIO_PIN_0) == 0)
-				LEFT_NUM_DOWN = true;
+			LEFT_NUM_DOWN = true;
+		}
+		else if((GPIOC->IDR & GPIO_PIN_0) == 0) //Пришла команда "Высшего приоритета" с дистанционного пульта управления (distHIGHP)
+		{
+			/*
+			 * handCTRL(GPIOC3): 	Management:
+			 *     	 High			  Local
+			 *     	 Low			  Remote
+			 */
+			if((GPIOC->IDR & GPIO_PIN_3) == 0)	//Проверяем статус, с какого пульта идет управление (handCTRL)
+			{
+				if(((GPIOB->IDR & GPIO_PIN_15) > 0) && ((GPIOB->IDR & GPIO_PIN_14) < 1))
+				{
+					Forward = true;
+				}
+				else if(((GPIOB->IDR & GPIO_PIN_15) < 1) && ((GPIOB->IDR & GPIO_PIN_14) > 0))
+				{
+					Reverse = true;
+				}
+			}
+				HighPriority = true;
 		}
 	}
 	else if (GPIO_Pin == GPIO_PIN_1)
 	{
-		if((GPIOB->IDR & GPIO_PIN_1) == 0) //Push middle button
+		if((GPIOB->IDR & GPIO_PIN_1) == 0) //Нажатие на среднюю кнопку
 		{
-			if((GPIOB->IDR & GPIO_PIN_1) == 0)
-				LEFT_NUM_UP = true;
+			LEFT_NUM_UP = true;
+		}
+		else if((GPIOC->IDR & GPIO_PIN_1) == 0) //Пришла команда "Открыть" с местного пульта управления (handOPEN)
+		{
+			/*
+			 * handCTRL(GPIOC3): 	Management:
+			 *     	 High			  Local
+			 *     	 Low			  Remote
+			 */
+			if((GPIOC->IDR & GPIO_PIN_3) > 0)	//Проверяем статус, с какого пульта идет управление (handCTRL)
+				Forward = true;
 		}
 	}
 	else if (GPIO_Pin == GPIO_PIN_2)
 	{
-		if((GPIOB->IDR & GPIO_PIN_2) == 0) //Push right button
+		if((GPIOB->IDR & GPIO_PIN_2) < 1) //Нажатие на правую кнопку
 		{
-			if((GPIOB->IDR & GPIO_PIN_2) == 0)
-				RIGHT_NUM = true;
+			RIGHT_NUM = true;
+		}
+		else if((GPIOC->IDR & GPIO_PIN_2) < 1) //Пришла команда "Закрыть" с местного пульта управления (handCLOSE)
+		{
+			/*
+			 * handCTRL(GPIOC3): 	Management:
+			 *     	 High			  Local
+			 *     	 Low			  Remote
+			 */
+			if((GPIOC->IDR & GPIO_PIN_3) > 0)	//Проверяем статус, с какого пульта идет управление (handCTRL)
+				Reverse = true;
 		}
 	}
-	//----------------------------------------------------------------------------------
 	//-------------------------------ZeroCrossing handler-------------------------------
 	else if (GPIO_Pin == GPIO_PIN_3)
 	{
@@ -288,22 +326,75 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			}
 		}
 	}
-	//----------------------------------------------------------------------------------
-	//-----------------------------------CMD handler------------------------------------
-	else if (GPIO_Pin == GPIO_PIN_12)
+	else if (GPIO_Pin == GPIO_PIN_8)
 	{
-		if((GPIOA->IDR & GPIO_PIN_12) == 0) //Received command "OPENmcu"
+		if((GPIOB->IDR & GPIO_PIN_8) == 0) //Пришла команда "Открыть" с дистанционного пульта управления (distOPEN)
 		{
-			flag_OPENmcu = true;
+			/*
+			 * handCTRL(GPIOC3): 	Management:
+			 *     	 High			  Local
+			 *     	 Low			  Remote
+			 */
+			if((GPIOC->IDR & GPIO_PIN_3) == 0)	//Проверяем статус, с какого пульта идет управление (handCTRL)
+				Forward = true;
 		}
 	}
 	else if (GPIO_Pin == GPIO_PIN_11)
 	{
 		if((GPIOA->IDR & GPIO_PIN_11) == 0) //Received command "CLOSEmcu"
 		{
-			flag_CLOSEmcu = true;
+//			flag_CLOSEmcu = true;
+			Stop = true;
 		}
 	}
+	else if (GPIO_Pin == GPIO_PIN_12)
+	{
+		if((GPIOA->IDR & GPIO_PIN_12) == 0) //Received command "OPENmcu"
+		{
+//			flag_OPENmcu = true;
+			Stop = true;
+		}
+	}
+	else if (GPIO_Pin == GPIO_PIN_13)
+	{
+		if((GPIOC->IDR & GPIO_PIN_13) == 0) //Пришла команда "Закрыть" с дистанционного пульта управления (distCLOSE)
+		{
+			/*
+			 * handCTRL(GPIOC3): 	Management:
+			 *     	 High			  Local
+			 *     	 Low			  Remote
+			 */
+			if((GPIOC->IDR & GPIO_PIN_3) == 0)	//Проверяем статус, с какого пульта идет управление (handCTRL)
+				Reverse = true;
+		}
+	}
+	else if (GPIO_Pin == GPIO_PIN_14)
+	{
+		if((GPIOC->IDR & GPIO_PIN_14) == 0) //Пришла команда "Остановить" с дистанционного пульта управления (distSTOP)
+		{
+			/*
+			 * handCTRL(GPIOC3): 	Management:
+			 *     	 High			  Local
+			 *     	 Low			  Remote
+			 */
+			if((GPIOC->IDR & GPIO_PIN_3) == 0)	//Проверяем статус, с какого пульта идет управление (handCTRL)
+				Stop = true;
+		}
+	}
+	else if (GPIO_Pin == GPIO_PIN_15)
+	{
+		if((GPIOC->IDR & GPIO_PIN_15) == 0) //Пришла команда "Передать управление плате расширения" с дистанционного пульта управления (distINT)
+		{
+			/*
+			 * handCTRL(GPIOC3): 	Management:
+			 *     	 High			  Local
+			 *     	 Low			  Remote
+			 */
+			if((GPIOC->IDR & GPIO_PIN_3) == 0)	//Проверяем статус, с какого пульта идет управление (handCTRL)
+				Interface = true;
+		}
+	}
+
 	//----------------------------------------------------------------------------------
 	//----------------------------------------------------------------------------------
 	else

@@ -6,18 +6,20 @@
  */
 #include "../periphery_io/Inc/cmd.h"
 
-extern bool flag_OPENmcu;
-extern bool flag_CLOSEmcu;
+extern bool Forward;
+extern bool Reverse;
+extern bool Stop;
 extern bool DirMove_OPENmcu;
 extern bool DirMove_CLOSEmcu;
-extern bool Stop;
+
 
 //Функция запуска направления движения задвижки ОТКР/ЗАКР
 void Direction_Move(void)
 {
-	if(flag_OPENmcu)	//Открытие задвижки
+	if(Forward)	//Открытие задвижки
 	{
-		DirMove_CLOSEmcu = false;
+//		DirMove_CLOSEmcu = false;
+		Forward = false;
 
 		HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_4);	//Stop timer two channel four	(AREV)
 		HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);	//Stop timer three channel one	(BFWD)
@@ -27,12 +29,12 @@ void Direction_Move(void)
 		HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);	//Run timer three channel one	(BFWD)
 		HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);	//Run timer four channel one	(CFWD)
 
-		DirMove_OPENmcu = true;
-		flag_OPENmcu = false;
+//		DirMove_OPENmcu = true;
 	}
-	else if(flag_CLOSEmcu)	//Закрытие задвижки
+	else if(Reverse)	//Закрытие задвижки
 	{
-		DirMove_OPENmcu = false;
+//		DirMove_OPENmcu = false;
+		Reverse = false;
 
 		HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);	//Stop timer two channel one	(AFWD)
 		HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);	//Stop timer three channel one	(BFWD)
@@ -42,8 +44,7 @@ void Direction_Move(void)
 		HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);	//Run timer three channel one	(BFWD)
 		HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_4);	//Run timer four channel four	(CREV)
 
-		DirMove_CLOSEmcu = true;
-		flag_CLOSEmcu = false;
+//		DirMove_CLOSEmcu = true;
 	}
 	else if(Stop)	//Останавливаем привод
 	{
