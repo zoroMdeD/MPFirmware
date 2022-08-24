@@ -21,9 +21,11 @@
 #include "adc.h"
 #include "dma.h"
 #include "i2c.h"
+#include "rtc.h"
 #include "spi.h"
 #include "tim.h"
 #include "usart.h"
+#include "wwdg.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -48,6 +50,12 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+//Скважность равна нулю при значении 9000, для увеличения скважности уменьшаем значение
+uint16_t Compare_1 = 0;
+uint16_t Compare_2 = 0;
+uint16_t Compare_3 = 0;
+uint16_t DutyCicle = 4500;	//Уставка до какой скважности увеличивать
+
 char trans_str[64] = {0,};
 bool Stop = false;					//Флаг остановки эл.привода
 bool Forward = false;				//Флаг начала движения эл.привода вперед(открытие)
@@ -130,6 +138,8 @@ int main(void)
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_ADC1_Init();
+  MX_RTC_Init();
+  MX_WWDG_Init();
   MX_TIM1_Init();
   MX_TIM2_Init();
   MX_TIM3_Init();
@@ -143,11 +153,11 @@ int main(void)
 
 	EN_Interrupt();		//Для дебага/Конфигурации по USART1
 
-  // Init lcd using one of the stm32HAL i2c typedefs
-  if (ssd1306_Init(&hi2c2) != 0)
-  {
-	  Error_Handler();
-  }
+	// Init lcd using one of the stm32HAL i2c typedefs
+	if (ssd1306_Init(&hi2c2) != 0)
+	{
+		Error_Handler();
+	}
 	//----------------ADC-----------------------
 	HAL_ADC_Start_DMA(&hadc1, (uint32_t*)&adc, 3);		//Стартуем АЦП
 	HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_1);
@@ -157,162 +167,39 @@ int main(void)
 	SEND_str("Init sd card -> success\n");
 	//------------------------------------------
 
+	//--------------------------------Test--------------------------------
+//	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);	//Run timer two channel one		(AFWD)
+//	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);	//Run timer three channel one	(BFWD)
+//	__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 1000);
+//	uint16_t compare = 0;
+	//------------------------------End Test------------------------------
 
-	uint8_t short_state1 = 0;
-	uint8_t short_state2 = 0;
-	uint8_t short_state3 = 0;
-	uint8_t long_state1 = 0;
-	uint8_t long_state2 = 0;
-	uint8_t long_state3 = 0;
-	uint32_t time_key1 = 0;
-	uint32_t time_key2 = 0;
-	uint32_t time_key3 = 0;
-	/* USER CODE END 2 */
+  /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  uint32_t ms = HAL_GetTick();
-	  uint8_t key1_state = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_0);
-	  uint8_t key2_state = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1);
-	  uint8_t key3_state = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_2);
-
-	  if(key1_state == 0 && !short_state1 && (ms - time_key1) > 100)
-	  {
-	    short_state1 = 1;
-	    long_state1 = 0;
-	    time_key1 = ms;
-	  }
-	  if(key2_state == 0 && !short_state2 && (ms - time_key2) > 100)
-	  {
-	    short_state2 = 1;
-	    long_state2 = 0;
-	    time_key2 = ms;
-	  }
-	  if(key3_state == 0 && !short_state3 && (ms - time_key3) > 100)
-	  {
-	    short_state3 = 1;
-	    long_state3 = 0;
-	    time_key3 = ms;
-	  }
-	  else if(key1_state == 0 && !long_state1 && (ms - time_key1) > 2000)
-	  {
-	    long_state1 = 1;
-	    // действие на длинное нажатие
-	    SEND_str("LONG_PRESS_BT1\n");
-	  }
-	  else if(key2_state == 0 && !long_state2 && (ms - time_key2) > 2000)
-	  {
-	    long_state2 = 1;
-
-		info = true;
-		display_Sleep = false;
-	  	What_Time = 0;
-
-	    SEND_str("LONG_PRESS_BT2\n");
-	  }
-	  else if(key3_state == 0 && !long_state3 && (ms - time_key3) > 2000)
-	  {
-	    long_state3 = 1;
-
-	  	ssd1306_Fill(Black);
-	  	ssd1306_UpdateScreen(&hi2c2);
-
-	  	reserve_Current = Current * 1.25;	//Уставка по току плюс 25%
-	  	//Вызвать функцию сохранения уставки по току!!!
-
-	  	SEND_str("-------------------------\n");
-	  	SEND_str("| ");
-	  	 SEND_str("SETPOINT: ");
-    	snprintf(trans_str, 63, "%.2fA", reserve_Current);
-    	SEND_str(trans_str);
-    	SEND_str(" |\n");
-    	SEND_str("-------------------------\n");
-
-	  	ssd1306_SetCursor(42, 23);
-	  	ssd1306_WriteString("SAVE", Font_11x18, White);
-	  	ssd1306_UpdateScreen(&hi2c2);
-	  	HAL_Delay(1500);
-
-		info = true;
-
-	  	What_Time = 0;
-
-	    SEND_str("LONG_PRESS_BT3\n");
-	  }
-	  else if(key1_state == 1 && short_state1 && (ms - time_key1) > 100)
-	  {
-	    short_state1 = 0;
-	    time_key1 = ms;
-
-	    if(!long_state1)
-	    {
-		  	if(Current >= 1 && !display_Sleep)
-		  	{
-			  	if(Current >= 10 && Current < 11)
-			  	{
-			  		ssd1306_SetCursor(60, 23);
-				    ssd1306_WriteString("      ", Font_11x18, White);
-				  	ssd1306_SetCursor(60, 23);
-				  	snprintf(trans_str, 63, "%.2fA", Current -= 1);
-				  	ssd1306_WriteString(trans_str, Font_11x18, White);
-				  	ssd1306_UpdateScreen(&hi2c2);
-			  	}
-			  	else
-			  	{
-				  	ssd1306_SetCursor(60, 23);
-				  	snprintf(trans_str, 63, "%.2fA", Current -= 1);
-				  	ssd1306_WriteString(trans_str, Font_11x18, White);
-				  	ssd1306_UpdateScreen(&hi2c2);
-			  	}
-		  	}
-		  	What_Time = 0;
-	    	SEND_str("SHORT_PRESS_BT1\n");
-	    }
-	  }
-	  else if(key2_state == 1 && short_state2 && (ms - time_key2) > 100)
-	  {
-	    short_state2 = 0;
-	    time_key2 = ms;
-
-	    if(!long_state2)
-	    {
-		  	if(!display_Sleep)
-		  	{
-		  		ssd1306_SetCursor(60, 23);
-		  		snprintf(trans_str, 63, "%.2fA", Current += 1);
-		  		ssd1306_WriteString(trans_str, Font_11x18, White);
-		  		ssd1306_UpdateScreen(&hi2c2);
-		  	}
-		  	What_Time = 0;
-	    	SEND_str("SHORT_PRESS_BT2\n");
-	    }
-	  }
-	  else if(key3_state == 1 && short_state3 && (ms - time_key3) > 100)
-	  {
-	    short_state3 = 0;
-	    time_key3 = ms;
-
-	    if(!long_state3)
-	    {
-		  	if(!display_Sleep)
-		  	{
-			  	ssd1306_SetCursor(60, 23);
-			  	snprintf(trans_str, 63, "%.2fA", Current += 0.1);
-			  	ssd1306_WriteString(trans_str, Font_11x18, White);
-			  	ssd1306_UpdateScreen(&hi2c2);
-		  	}
-		  	What_Time = 0;
-	    	SEND_str("SHORT_PRESS_BT3\n");
-	    }
-	  }
-
-
+	  Direction_Move();
+	  //Придумать как заблокировать режим работы с дисплеем
 	  Display_info();
 	  Сurrent_Сomparison();
 	  DEBUG_main();
-
+	  //--------------------------------Test--------------------------------
+//	  while(compare < 9000)
+//	  {
+//		  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, compare);
+//	  	  compare = compare + 10;
+//	  	  HAL_Delay(10);
+//	  }
+//	  compare = 9000;
+//	  while(compare > 100)
+//	  {
+//		  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, compare);
+//	  	  compare = compare - 10;
+//	  	  HAL_Delay(10);
+//	  }
+	  //------------------------------End Test------------------------------
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -333,10 +220,11 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI|RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
@@ -358,7 +246,8 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_RTC|RCC_PERIPHCLK_ADC;
+  PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSI;
   PeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV6;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
@@ -369,24 +258,34 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
+	//--------------------------------Test--------------------------------
+//		if (GPIO_Pin == GPIO_PIN_3) //Phase A ZeroCrossing
+//		{
+//			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);	//Stop timer two channel one	(AFWD)
+//			HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);	//Run timer two channel one		(AFWD)
+//		}
+//		else if (GPIO_Pin == GPIO_PIN_5) //Phase B ZeroCrossing
+//		{
+//			HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);	//Stop timer three channel one	(BFWD)
+//			HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);	//Run timer three channel one	(BFWD)
+//		}
+	//------------------------------End Test------------------------------
+
 	if (GPIO_Pin == GPIO_PIN_0)	//Пришла команда "Высшего приоритета" с дистанционного пульта управления (distHIGHP)
 	{
-//		if((GPIOB->IDR & GPIO_PIN_0) < 1) //Нажатие на левую кнопку
-//		{
-//			LEFT_NUM_DOWN = true;
-//		}
 		/*
 		 * handCTRL(GPIOC3): 	Management:
 		 *     	 High			  Local
 		 *     	 Low			  Remote
 		 */
-		if((GPIOC->IDR & GPIO_PIN_3) < 1)	//Проверяем статус, с какого пульта идет управление (handCTRL)
+		//Проверяем статус, с какого пульта идет управление (handCTRL)
+		if((GPIOC->IDR & GPIO_PIN_3) == 0)
 		{
-			if(((GPIOB->IDR & GPIO_PIN_15) > 0) && ((GPIOB->IDR & GPIO_PIN_14) < 1))	//HIGHP_OPENmcu = 1; HIGHP_CLOSEmcu = 0;
+			if(((GPIOB->IDR & GPIO_PIN_15) != 0) && ((GPIOB->IDR & GPIO_PIN_14) == 0))	//HIGHP_OPENmcu = 1; HIGHP_CLOSEmcu = 0;
 			{
 				Forward = true;
 			}
-			else if(((GPIOB->IDR & GPIO_PIN_15) < 1) && ((GPIOB->IDR & GPIO_PIN_14) > 0))	//HIGHP_OPENmcu = 0; HIGHP_CLOSEmcu = 1;
+			else if(((GPIOB->IDR & GPIO_PIN_15) == 0) && ((GPIOB->IDR & GPIO_PIN_14) != 0))	//HIGHP_OPENmcu = 0; HIGHP_CLOSEmcu = 1;
 			{
 				Reverse = true;
 			}
@@ -395,16 +294,13 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	}
 	else if (GPIO_Pin == GPIO_PIN_1)	//Пришла команда "Открыть" с местного пульта управления (handOPEN)
 	{
-//		if((GPIOB->IDR & GPIO_PIN_1) < 1) //Нажатие на среднюю кнопку
-//		{
-//			LEFT_NUM_UP = true;
-//		}
 		/*
 		 * handCTRL(GPIOC3): 	Management:
 		 *     	 High			  Local
 		 *     	 Low			  Remote
 		 */
-		if((GPIOC->IDR & GPIO_PIN_3) > 0)	//Проверяем статус, с какого пульта идет управление (handCTRL)
+		//Проверяем статус, с какого пульта идет управление (handCTRL); Проверяем статус управления с вн.интерфейсов
+		if(((GPIOC->IDR & GPIO_PIN_3) != 0) && !Interface)
 		{
 			Forward = true;
 			/*
@@ -417,16 +313,13 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	}
 	else if (GPIO_Pin == GPIO_PIN_2)	//Пришла команда "Закрыть" с местного пульта управления (handCLOSE)
 	{
-//		if((GPIOB->IDR & GPIO_PIN_2) < 1) //Нажатие на правую кнопку
-//		{
-//			RIGHT_NUM = true;
-//		}
 		/*
 		 * handCTRL(GPIOC3): 	Management:
 		 *     	 High			  Local
 		 *     	 Low			  Remote
 		 */
-		if((GPIOC->IDR & GPIO_PIN_3) > 0)	//Проверяем статус, с какого пульта идет управление (handCTRL)
+		//Проверяем статус, с какого пульта идет управление (handCTRL); Проверяем статус управления с вн.интерфейсов
+		if(((GPIOC->IDR & GPIO_PIN_3) != 0) && !Interface)
 		{
 			Reverse = true;
 			/*
@@ -437,36 +330,61 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, SET);		//Выставляем флаг "mcuCLOSE"
 		}
 	}
-	else if (GPIO_Pin == GPIO_PIN_3) //Phase A ZeroCrossing
+	else if (GPIO_Pin == GPIO_PIN_3) //Переход через ноль на фазе "А"
 	{
 		if(DirMove_OPENmcu)
 		{
+			if(Compare_1 > DutyCicle)	//Увеличиваем скважность до уставки
+			{
+				__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, Compare_1);
+				Compare_1 = Compare_1 - 100;
+			}
 			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);	//Stop timer two channel one	(AFWD)
 			HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);	//Run timer two channel one		(AFWD)
 		}
 		else if(DirMove_CLOSEmcu)
 		{
+			if(Compare_1 > DutyCicle)	//Увеличиваем скважность до уставки
+			{
+				__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, Compare_1);
+				Compare_1 = Compare_1 - 100;
+			}
 			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_4);	//Stop timer two channel four	(AREV)
 			HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);	//Run timer two channel four	(AREV)
 		}
 	}
-	else if (GPIO_Pin == GPIO_PIN_5) //Phase B ZeroCrossing
+	else if (GPIO_Pin == GPIO_PIN_5) //Переход через ноль на фазе "B"
 	{
 		if(DirMove_OPENmcu || DirMove_CLOSEmcu)
 		{
+			if(Compare_2 > DutyCicle)	//Увеличиваем скважность до уставки
+			{
+				__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, Compare_2);
+				Compare_2 = Compare_2 - 100;
+			}
 			HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);	//Stop timer three channel one	(BFWD)
 			HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);	//Run timer three channel one	(BFWD)
 		}
 	}
-	else if (GPIO_Pin == GPIO_PIN_7) //Phase C ZeroCrossing
+	else if (GPIO_Pin == GPIO_PIN_7) //Переход через ноль на фазе "C"
 	{
 		if(DirMove_OPENmcu)
 		{
+			if(Compare_3 > DutyCicle)	//Увеличиваем скважность до уставки
+			{
+				__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_1, Compare_3);
+				Compare_3 = Compare_3 - 100;
+			}
 			HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_1);	//Stop timer Four channel one	(CFWD)
 			HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);	//Run timer four channel one	(CFWD)
 		}
 		else if(DirMove_CLOSEmcu)
 		{
+			if(Compare_3 > DutyCicle)	//Увеличиваем скважность до уставки
+			{
+				__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_4, Compare_3);
+				Compare_3 = Compare_3 - 100;
+			}
 			HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_4);	//Stop timer four channel four	(CREV)
 			HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_4);	//Run timer four channel four	(CREV)
 		}
@@ -478,7 +396,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		 *     	 High			  Local
 		 *     	 Low			  Remote
 		 */
-		if((GPIOC->IDR & GPIO_PIN_3) < 1)	//Проверяем статус, с какого пульта идет управление (handCTRL)
+		//Проверяем статус, с какого пульта идет управление (handCTRL); Проверяем статус управления с вн.интерфейсов
+		if(((GPIOC->IDR & GPIO_PIN_3) == 0) && !Interface)
 		{
 			Forward = true;
 			/*
@@ -504,7 +423,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		 *     	 High			  Local
 		 *     	 Low			  Remote
 		 */
-		if((GPIOC->IDR & GPIO_PIN_3) < 1)	//Проверяем статус, с какого пульта идет управление (handCTRL)
+		//Проверяем статус, с какого пульта идет управление (handCTRL); Проверяем статус управления с вн.интерфейсов
+		if(((GPIOC->IDR & GPIO_PIN_3) == 0) && !Interface)
 		{
 			Reverse = true;
 			/*
@@ -515,6 +435,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, SET);		//Выставляем флаг "mcuCLOSE"
 		}
 	}
+
+	//ОБРАТ�?ТЬ ВН�?МАН�?Е НА ЭТОТ С�?ГНАЛ!!!
+
 	else if (GPIO_Pin == GPIO_PIN_14) 	//Пришла команда "Остановить" с дистанционного пульта управления (distSTOP)
 	{
 		/*
@@ -522,9 +445,13 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		 *     	 High			  Local
 		 *     	 Low			  Remote
 		 */
-		if((GPIOC->IDR & GPIO_PIN_3) < 1)	//Проверяем статус, с какого пульта идет управление (handCTRL)
+		//Проверяем статус, с какого пульта идет управление (handCTRL); Проверяем статус управления с вн.интерфейсов
+		if(((GPIOC->IDR & GPIO_PIN_3) == 0) && !Interface)
 			Stop = true;
 	}
+
+	//ОБДУМАТЬ КАК ОБРАБАТЫВАТЬ ЭТОТ С�?ГНАЛ!!!
+
 	else if (GPIO_Pin == GPIO_PIN_15)	//Пришла команда "Передать управление плате расширения" с дистанционного пульта управления (distINT)
 	{
 		/*
@@ -532,7 +459,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		 *     	 High			  Local
 		 *     	 Low			  Remote
 		 */
-		if((GPIOC->IDR & GPIO_PIN_3) < 1)	//Проверяем статус, с какого пульта идет управление (handCTRL)
+		//Проверяем статус, с какого пульта идет управление (handCTRL)
+		if((GPIOC->IDR & GPIO_PIN_3) == 0)
 		{
 			Interface = true;
 			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, SET);	//Выставляем флаг "mcuINT", управление передано внешним интерфейсам

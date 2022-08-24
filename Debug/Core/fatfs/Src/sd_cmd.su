@@ -4,6 +4,3 @@
 ../Core/fatfs/Src/sd_cmd.c:167:6:fl_close	8	static
 ../Core/fatfs/Src/sd_cmd.c:174:6:str2hexStr	24	static
 ../Core/fatfs/Src/sd_cmd.c:189:6:save_dido	48	static
-../Core/fatfs/Src/sd_cmd.c:201:6:save_aido	48	static
-../Core/fatfs/Src/sd_cmd.c:213:6:save_pwm	48	static
-../Core/fatfs/Src/sd_cmd.c:225:6:save_tsido	48	static

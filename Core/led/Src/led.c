@@ -12,9 +12,9 @@
 
 extern char trans_str[];
 extern bool LEFT_NUM_UP;				//Флаг нажатия кнопки "Целые+"
-extern bool LEFT_NUM_DOWN;			//Флаг нажатия кнопки "Целые-"
-extern bool RIGHT_NUM;				//Флаг нажатия кнопки "Десятые+"
-extern bool info;					//Флаг главного экрана
+extern bool LEFT_NUM_DOWN;				//Флаг нажатия кнопки "Целые-"
+extern bool RIGHT_NUM;					//Флаг нажатия кнопки "Десятые+"
+extern bool info;						//Флаг главного экрана
 extern uint8_t time;					//Переменная задержки
 extern double Current;
 extern double reserve_Current;
@@ -23,8 +23,23 @@ extern bool display_Off;
 
 extern bool display_Sleep;
 
+bool short_state1 = 0;
+bool short_state2 = 0;
+bool short_state3 = 0;
+bool long_state1 = 0;
+bool long_state2 = 0;
+bool long_state3 = 0;
+uint32_t time_key1 = 0;
+uint32_t time_key2 = 0;
+uint32_t time_key3 = 0;
+
 void Display_info(void)
 {
+	uint32_t ms = HAL_GetTick();
+	bool key1_state = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_0);
+	bool key2_state = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1);
+	bool key3_state = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_2);
+
 	if(info || display_Off)
 	{
 		if(display_Off)	//Выключаем дисплей
@@ -48,6 +63,135 @@ void Display_info(void)
 			ssd1306_UpdateScreen(&hi2c2);
 			info = false;
 		}
+	}
+	if(key1_state == false && !short_state1 && (ms - time_key1) > 100)
+	{
+	    short_state1 = true;
+	    long_state1 = false;
+	    time_key1 = ms;
+	}
+	if(key2_state == false && !short_state2 && (ms - time_key2) > 100)
+	{
+	    short_state2 = true;
+	    long_state2 = false;
+	    time_key2 = ms;
+	}
+	if(key3_state == false && !short_state3 && (ms - time_key3) > 100)
+	{
+	    short_state3 = true;
+	    long_state3 = false;
+	    time_key3 = ms;
+	}
+	else if(key1_state == false && !long_state1 && (ms - time_key1) > 2000)
+	{
+	    long_state1 = true;
+	    // действие на длинное нажатие
+//	    SEND_str("LONG_PRESS_BT1\n");
+	}
+	else if(key2_state == false && !long_state2 && (ms - time_key2) > 2000)
+	{
+	    long_state2 = true;
+
+		info = true;
+		display_Sleep = false;
+	  	What_Time = 0;
+
+//	    SEND_str("LONG_PRESS_BT2\n");
+	}
+	else if(key3_state == false && !long_state3 && (ms - time_key3) > 2000)
+	{
+	    long_state3 = true;
+
+	  	ssd1306_Fill(Black);
+	  	ssd1306_UpdateScreen(&hi2c2);
+
+	  	reserve_Current = Current * 1.25;	//Уставка по току плюс 25%
+	  	//Вызвать функцию сохранения уставки по току!!!
+
+//	  	SEND_str("-------------------------\n");
+//	  	SEND_str("| ");
+	  	SEND_str("SETPOINT: ");
+	  	snprintf(trans_str, 63, "%.2fA\n", reserve_Current);
+	  	SEND_str(trans_str);
+//	  	SEND_str(" |\n");
+//	  	SEND_str("-------------------------\n");
+
+	  	ssd1306_SetCursor(42, 23);
+	  	ssd1306_WriteString("SAVE", Font_11x18, White);
+	  	ssd1306_UpdateScreen(&hi2c2);
+	  	HAL_Delay(1500);
+
+		info = true;
+
+	  	What_Time = 0;
+
+//	    SEND_str("LONG_PRESS_BT3\n");
+	}
+	else if(key1_state == true && short_state1 && (ms - time_key1) > 100)
+	{
+	    short_state1 = false;
+	    time_key1 = ms;
+
+	    if(!long_state1)
+	    {
+		  	if(Current >= 1 && !display_Sleep)
+		  	{
+			  	if(Current >= 10 && Current < 11)
+			  	{
+			  		ssd1306_SetCursor(60, 23);
+				    ssd1306_WriteString("      ", Font_11x18, White);
+				  	ssd1306_SetCursor(60, 23);
+				  	snprintf(trans_str, 63, "%.2fA", Current -= 1);
+				  	ssd1306_WriteString(trans_str, Font_11x18, White);
+				  	ssd1306_UpdateScreen(&hi2c2);
+			  	}
+			  	else
+			  	{
+				  	ssd1306_SetCursor(60, 23);
+				  	snprintf(trans_str, 63, "%.2fA", Current -= 1);
+				  	ssd1306_WriteString(trans_str, Font_11x18, White);
+				  	ssd1306_UpdateScreen(&hi2c2);
+			  	}
+		  	}
+		  	What_Time = 0;
+//	    	SEND_str("SHORT_PRESS_BT1\n");
+	    }
+	}
+	else if(key2_state == true && short_state2 && (ms - time_key2) > 100)
+	{
+	    short_state2 = false;
+	    time_key2 = ms;
+
+	    if(!long_state2)
+	    {
+		  	if(!display_Sleep)
+		  	{
+		  		ssd1306_SetCursor(60, 23);
+		  		snprintf(trans_str, 63, "%.2fA", Current += 1);
+		  		ssd1306_WriteString(trans_str, Font_11x18, White);
+		  		ssd1306_UpdateScreen(&hi2c2);
+		  	}
+		  	What_Time = 0;
+//	    	SEND_str("SHORT_PRESS_BT2\n");
+	    }
+	}
+	else if(key3_state == true && short_state3 && (ms - time_key3) > 100)
+	{
+	    short_state3 = false;
+	    time_key3 = ms;
+
+	    if(!long_state3)
+	    {
+		  	if(!display_Sleep)
+		  	{
+			  	ssd1306_SetCursor(60, 23);
+			  	snprintf(trans_str, 63, "%.2fA", Current += 0.1);
+			  	ssd1306_WriteString(trans_str, Font_11x18, White);
+			  	ssd1306_UpdateScreen(&hi2c2);
+		  	}
+		  	What_Time = 0;
+//	    	SEND_str("SHORT_PRESS_BT3\n");
+	    }
 	}
 //	if(LEFT_NUM_DOWN)
 //	{

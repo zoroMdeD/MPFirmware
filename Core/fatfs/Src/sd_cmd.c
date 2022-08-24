@@ -195,39 +195,3 @@ void save_dido(char *D_IN, char *text)
 	SEND_str(name_FIL);
 	my_write_file_json(name_FIL, text);
 }
-//Функция сохраниения конфигурационных данных (Включить/выключить один цифровой выход(открытый коллектор) если аналоговый вход в интервале значений)
-//Принимает "A_IN" - строку с номером аналогового входа
-//Принимает "text" - указатель на строку JSON
-void save_aido(char *A_IN, char *text)
-{
-	char name_FIL[32];
-
-	SEND_str(text);
-	sprintf(name_FIL,"%s%s.json", A_IN, "(AiDo)");
-	SEND_str(name_FIL);
-	my_write_file_json(name_FIL, text);
-}
-//Функция сохраниения конфигурационных данных (Задать сигнал ШИМ на одном выходе)
-//Принимает "PWM_OUT" - строку с номером ШИМ выхода
-//Принимает "text" - указатель на строку JSON
-void save_pwm(char *PWM_OUT, char *text)
-{
-	char name_FIL[32];
-
-	SEND_str(text);
-	sprintf(name_FIL,"%s.json", PWM_OUT);
-	SEND_str(name_FIL);
-	my_write_file_json(name_FIL, text);
-}
-//Функция сохраниения конфигурационных данных (Включить/выключить один цифровой выход(открытый коллектор) если температура датчика в интервале значений)
-//Принимает "ROM_RAW" - строку с уникальным идентификатором температурного датчика
-//Принимает "text" - указатель на строку JSON
-void save_tsido(char *ROM_RAW, char *text)
-{
-	char name_FIL[32];
-
-	SEND_str(text);
-	sprintf(name_FIL,"%s%s.json", ROM_RAW, "(TSiDo)");
-	SEND_str(name_FIL);
-	my_write_file_json(name_FIL, text);
-}
