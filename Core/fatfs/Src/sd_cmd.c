@@ -16,6 +16,8 @@ extern uint32_t firmwareBytesToWrite;
 extern uint32_t firmwareBytesCounter;
 
 extern bool check_init;
+extern char DateTime[];
+extern int LaunchNum;
 
 uint8_t readBuffer[512];	//Буфер для хранения прочитанных с карты данных
 uint8_t WriteBuffer[248];
@@ -23,6 +25,8 @@ uint32_t BytesToRead = 0;	//Буфер для хранения размера ф
 uint32_t BytesCounter = 0;	//Счетчик кол-ва прочитанных данных итерируемый пачками readBuffer[512]
 UINT readBytes = 0;			//Счетчик кол-ва прочитанных данных
 UINT WriteBytes = 0;		//Счетчик кол-ва записанных данных
+
+extern bool LogFileCreate;
 
 //Функция инициализации карты памяти
 void MyInitCard(void)
@@ -110,6 +114,85 @@ void MyWriteFileJson(char *path, char *text)
 		}
 	}
 }
+//Создание файла логов если такового не на карте памяти
+//Функция принимает имя файла логов
+//Default name: LogFile.txt
+void CreateLogFile(char *name)
+{
+	char text[1024];
+	sprintf(text, "<< ManagePower version firmware %s log-file %s >>\n"
+				  "------------------------------------------------------------------"
+				  "%s	--->	ManagePower launch number %d\n"
+				  "%s	--->	Configuration:\n"
+				  "\t\t\t\tSETPOINT: %.2f,\n"
+				  "\t\t\t\tSEQUENCE: %s,\n"
+				  "\t\t\t\tCOUPWORK: %s,\n"
+				  "\t\t\t\tHIGHPRIORITY: %s,\n"
+				  "\t\t\t\tHANDCTRL: %s,\n"
+				  "\t\t\t\tDUTYCYCLE: %s\n", Config.VERSIONFIRMWARE, DateTime,
+				  	  	  	  	  	  	  	 DateTime, LaunchNum,
+											 DateTime,
+											 Config.SETPOINT,
+											 Config.SEQUENCE,
+											 Config.COUPWORK,
+											 Config.HIGHPRIORITY,
+											 Config.HANDCTRL,
+											 Config.DUTYCYCLE);
+
+	if(!LogFileCreate)
+	{
+		if (f_mount(0, &FATFS_Obj) == FR_OK)
+		{
+			result = f_open(&MyFile, name + '\0', FA_CREATE_ALWAYS | FA_WRITE);
+			if(result == FR_OK)
+			{
+				result = f_write(&MyFile, text, 256, &WriteBytes);
+
+				LogFileCreate = true;
+			}
+		}
+	}
+	FlClose();
+}
+//Функция добавления логов в созданный ранее файл
+//Функция принимает имя файла куда дописать
+//Принимает текст который надо дописать в файл
+int AddToLogFile(char *name, char *text)
+{
+	if (f_mount(0, &FATFS_Obj) == FR_OK)
+	{
+		result = f_open(&MyFile, name + '\0', FA_OPEN_ALWAYS | FA_WRITE);
+		if(result == FR_OK)
+		{
+			firmwareBytesCounter = 0;
+			uint16_t size = strlen(text);
+			result = f_lseek(&MyFile, MyFile.fsize);	//Поиск конца файла
+			if(result == FR_OK)
+			{
+				if((size - firmwareBytesCounter) >= 256)	//default: 248
+				{
+					result = f_write(&MyFile, text, 256, &WriteBytes);
+					firmwareBytesCounter += 256;
+					if(firmwareBytesCounter == size)
+					{
+						f_close(&MyFile);
+						Config.LOGFILE = false;
+						return SUCCESS;
+					}
+				}
+				else if (size != firmwareBytesCounter)
+				{
+					result = f_write(&MyFile, text, (size - firmwareBytesCounter) , &WriteBytes);
+					firmwareBytesCounter = size;
+					f_close(&MyFile);
+					Config.LOGFILE = false;
+					return SUCCESS;
+				}
+			}
+		}
+	}
+	return ERROR;
+}
 //Функция записи файла прошивки .bin на карту памяти
 //Принимает "path" - указатель на имя файла
 //Принимает "data_bytes" - указатель на буффер данных, которые нужно сохранить
@@ -190,8 +273,8 @@ void save_dido(char *D_IN, char *text)
 {
 	char name_FIL[32];
 
-	SEND_str(text);
+	SendStr(text);
 	sprintf(name_FIL,"%s%s.json", D_IN, "(DiDo)");
-	SEND_str(name_FIL);
-	my_write_file_json(name_FIL, text);
+	SendStr(name_FIL);
+	MyWriteFileJson(name_FIL, text);
 }

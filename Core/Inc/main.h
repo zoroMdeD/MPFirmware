@@ -79,6 +79,18 @@ extern "C" {
 	 * Trigger Source = Zero crossing phase C 								-	(C_ZeroCross)	-	PB7
 	 */
 
+//Settings firmware
+extern struct ConfigurationSystem
+{
+	double SETPOINT;		//Уставка по току по превышению которой останавливаем работу эл.привода
+	char *SEQUENCE;			//Флаг правильности чередования фаз(правильно ли расключили колодки)
+	char *COUPWORK;			//Флаг работаем по муфте или нет
+	char *VERSIONFIRMWARE;	//Версия прошивки
+	char *HIGHPRIORITY;
+	char *HANDCTRL;
+	char *DUTYCYCLE;
+	bool LOGFILE;			//Флаг необходимости дополнить логфайл
+}Config;
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/

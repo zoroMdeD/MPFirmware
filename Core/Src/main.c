@@ -107,7 +107,11 @@ FIL MyFile;							//�?нициализация структуры описыв
 uint32_t BytesToWrite = 0;			//Кол-во записанных байт
 int firmwareBytesToWrite = 0;		//Кол-во байт которые нужно записать(размер файла)
 int firmwareBytesCounter = 0;		//Счетчик полной почсылки (248 байт)
+
+bool LogFileCreate = false;			//Флаг того что необходимо создать файл логов, false - необходимо создать
 //-------------------------------------------
+char DateTime[64];
+int LaunchNum = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -181,6 +185,8 @@ int main(void)
 	//------------------------------------------
 	HAL_GPIO_WritePin(GPIOC, mcuREADY_Pin, SET);	//Индикация, МК работает нормально
   /* USER CODE END 2 */
+
+	//Записать в лог-файл число запусков после обесточивания эл.привода(теоретически кол-во открытий крышки привода)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
