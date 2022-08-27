@@ -147,10 +147,10 @@ void Error_Handler(void);
 #define SCL_GPIO_Port GPIOB
 #define SDA_Pin GPIO_PIN_11
 #define SDA_GPIO_Port GPIOB
-#define SELFP_CLOSEmcu_Pin GPIO_PIN_12
-#define SELFP_CLOSEmcu_GPIO_Port GPIOB
-#define SELFP_OPENmcu_Pin GPIO_PIN_13
-#define SELFP_OPENmcu_GPIO_Port GPIOB
+#define SELF_CAPTURE_Pin GPIO_PIN_12
+#define SELF_CAPTURE_GPIO_Port GPIOB
+#define COUPLING_WORK_Pin GPIO_PIN_13
+#define COUPLING_WORK_GPIO_Port GPIOB
 #define HIGHP_CLOSEmcu_Pin GPIO_PIN_14
 #define HIGHP_CLOSEmcu_GPIO_Port GPIOB
 #define HIGHP_OPENmcu_Pin GPIO_PIN_15
@@ -181,18 +181,13 @@ void Error_Handler(void);
 #define WIRE_TxD_GPIO_Port GPIOC
 #define WIRE_RxD_Pin GPIO_PIN_11
 #define WIRE_RxD_GPIO_Port GPIOC
-#define A_ZeroCross_Pin GPIO_PIN_3
-#define A_ZeroCross_GPIO_Port GPIOB
 #define BFWD_Pin GPIO_PIN_4
 #define BFWD_GPIO_Port GPIOB
-#define B_ZeroCross_Pin GPIO_PIN_5
-#define B_ZeroCross_GPIO_Port GPIOB
 #define CFWD_Pin GPIO_PIN_6
 #define CFWD_GPIO_Port GPIOB
-#define C_ZeroCross_Pin GPIO_PIN_7
-#define C_ZeroCross_GPIO_Port GPIOB
 #define distOPEN_Pin GPIO_PIN_8
 #define distOPEN_GPIO_Port GPIOB
+#define distOPEN_EXTI_IRQn EXTI9_5_IRQn
 #define CREV_Pin GPIO_PIN_9
 #define CREV_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */

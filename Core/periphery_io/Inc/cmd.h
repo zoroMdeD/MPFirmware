@@ -10,6 +10,6 @@
 
 #include "main.h"
 
-void Direction_Move(void);
+void DirectionMove(void);
 
 #endif /* PERIPHERY_IO_INC_CMD_H_ */

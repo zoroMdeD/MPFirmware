@@ -18,11 +18,13 @@ extern double reserve_Current;
 //Функция преобразования данных АЦП
 //Принимает "ADC_value" - значение АЦП
 //Возвращает преобразованное значение в амперах
-double Conversion_ADC1(uint16_t ADC_value)
+double ConversionADC(uint16_t ADC_value)
 {
-	//The average point is 1605mV
-	//Sensitivity 66mV
-	//Gain 1.56
+	/*
+	 * The average point is 1605mV
+	 * Sensitivity 66mV
+	 * Gain 1.56
+	 */
 
 	double Amps = 0;
 	double Voltage = 0;
@@ -34,7 +36,7 @@ double Conversion_ADC1(uint16_t ADC_value)
 	return Amps;
 }
 //Функция сравнения значения тока уставки с действующими значениями тока на фазах
-void Сurrent_Сomparison(void)
+void СurrentСomparison(void)
 {
     if(cnt == 10)
     {

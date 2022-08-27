@@ -11,7 +11,7 @@ char DBG_str[DBG_RX_BUFFER_SIZE] = {0,};
 
 
 //Функция удаления символов \r и \n из строки
-void clear_string(char *src)
+void clearString(char *src)
 {
 	char *dst = NULL;
 	if(!src) return;
@@ -33,24 +33,24 @@ void clear_string(char *src)
 }
 //Функция передачи байта по USART3
 //Принимает байт
-void USART_Tx(unsigned char Data)
+void UsartTx(unsigned char Data)
 {
 	while(!(USART1->SR & USART_SR_TC));
 	USART1->DR = Data;
 }
 //Функция отправки сткроки
 //Принимает строку для отправки
-void SEND_str(char * string)
+void SendStr(char * string)
 {
 	uint8_t i = 0;
 	while(string[i])
 	{
-		USART_Tx(string[i]);
+		UsartTx(string[i]);
 		i++;
 	}
 }
 //Функция для отладки через COM порт
-void DEBUG_main(void)
+void DebugMain(void)
 {
 	if(dbg_available())
 	{
@@ -66,22 +66,22 @@ void DEBUG_main(void)
 				break;
 			HAL_Delay(1);
 		}
-		clear_string(DBG_buf);
+		clearString(DBG_buf);
 		//---------------------------------------------Old function---------------------------------------------
 		if(strstr(DBG_buf, "TEST") != NULL)
 		{
-			SEND_str("THE DEVICE IS WORKING\n");
+			SendStr("THE DEVICE IS WORKING\n");
 		}
 		//-------------------------------------------End Old function-------------------------------------------
 		//------------------------------------------------SD_CARD-----------------------------------------------
 		else if(strstr(DBG_buf, "READ_SD") != NULL)
 		{
-			my_read_file();
+			MyReadFile();
 		}
 		else if(strstr(DBG_buf, "WRITE_SD") != NULL)
 		{
 //			test_create_json();
-			my_write_file_json("TestFile.txt", "text_testing");
+			MyWriteFileJson("TestFile.txt", "text_testing");
 		}
 		//------------------------------------------------------------------------------------------------------
 		//--------------------------------------------UPDATE_FIRMWARE-------------------------------------------
@@ -97,7 +97,7 @@ void DEBUG_main(void)
 		else	//тест для посылки строки через терминал
 		{
 			snprintf(DBG_str, DBG_RX_BUFFER_SIZE, "%s", DBG_buf);
-			SEND_str(DBG_str);
+			SendStr(DBG_str);
 			json_input(DBG_str);
 		}
 		if(fdbg)

@@ -25,17 +25,17 @@ UINT readBytes = 0;			//Счетчик кол-ва прочитанных дан
 UINT WriteBytes = 0;		//Счетчик кол-ва записанных данных
 
 //Функция инициализации карты памяти
-void my_init_card(void)
+void MyInitCard(void)
 {
 //	SD_PowerOn();
 	sd_ini();
 }
 //Функция чтения файла с карты памяти
-void my_read_file(void)
+void MyReadFile(void)
 {
 	if (f_mount(0, &FATFS_Obj) == FR_OK)	//Монтируем модуль FatFs
 	{
-		SEND_str("f_mount -> success\n");
+		SendStr("f_mount -> success\n");
 
 		uint8_t path[18]="JSON_voltage.json";
 		path[17] = '\0';
@@ -44,13 +44,13 @@ void my_read_file(void)
 
 		if(result == FR_OK)
 		{
-			SEND_str("f_open -> success\n");
+			SendStr("f_open -> success\n");
 
 			BytesToRead = MyFile.fsize;
 
 			char str1[60];
 			sprintf(str1, "file_Size: %d Byte\n", BytesToRead);
-			SEND_str(str1);
+			SendStr(str1);
 
 			BytesCounter = 0;
 			while ((BytesToRead - BytesCounter) >= 512)
@@ -71,11 +71,11 @@ void my_read_file(void)
 //			result = f_read(&test, readBuffer, sizeof(readBuffer), &readBytes);
 //			if(result == FR_OK)
 //			{
-//				SEND_str("f_read -> success\n");
-//				SEND_str(readBuffer);
-//				SEND_str("\n");
+//				SendStr("f_read -> success\n");
+//				SendStr(readBuffer);
+//				SendStr("\n");
 //				sprintf(str1,"BytesToRead: %d\n",readBytes);
-//				SEND_str(str1);
+//				SendStr(str1);
 //			}
 		    f_close(&MyFile);
 //		    f_unlink((char*)path);
@@ -85,26 +85,26 @@ void my_read_file(void)
 //Функция записи файла на карту памяти
 //Принимает "path" - указатель на имя файла
 //Принимает "text" - указатель на строку JSON, которую нужно сохранить
-void my_write_file_json(char *path, char *text)
+void MyWriteFileJson(char *path, char *text)
 {
 	if (f_mount(0, &FATFS_Obj) == FR_OK)
 	{
-		SEND_str("f_mount -> success\n");
+		SendStr("f_mount -> success\n");
 
 		result = f_open(&MyFile, path + '\0', FA_CREATE_ALWAYS|FA_WRITE);
 
 		if(result == FR_OK)
 		{
-			SEND_str("f_open -> success\n");
+			SendStr("f_open -> success\n");
 
 			result = f_write(&MyFile, text, strlen(text), &WriteBytes);
 			if(result == FR_OK)
 			{
-				SEND_str("f_write -> success\n");
+				SendStr("f_write -> success\n");
 
 				char str1[60];
 				sprintf(str1, "write_bytes: %d Byte\n", WriteBytes);
-				SEND_str(str1);
+				SendStr(str1);
 			}
 		    f_close(&MyFile);
 		}
@@ -115,7 +115,7 @@ void my_write_file_json(char *path, char *text)
 //Принимает "data_bytes" - указатель на буффер данных, которые нужно сохранить
 //Принимает "crc32" - контрольную сумму принимаемого пакеда данных
 //Возвращает статус контроля целостности данных
-//char *my_write_file_firmware(char *name, char *data_bytes, uint32_t crc32)
+//char *MyWriteFileFirmware(char *name, char *data_bytes, uint32_t crc32)
 //{
 //	if(!check_init)
 //	{
@@ -164,7 +164,7 @@ void my_write_file_json(char *path, char *text)
 //	return FW_UPD_ERROR;
 //}
 //Функция закрытия файла
-void fl_close(void)
+void FlClose(void)
 {
     f_close(&MyFile);
 }

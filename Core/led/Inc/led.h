@@ -10,6 +10,6 @@
 
 #include "main.h"
 
-void Display_info(void);
+void DisplayInfo(void);
 
 #endif /* LED_INC_LED_H_ */

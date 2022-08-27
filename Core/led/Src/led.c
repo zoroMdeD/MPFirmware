@@ -33,7 +33,7 @@ uint32_t time_key1 = 0;
 uint32_t time_key2 = 0;
 uint32_t time_key3 = 0;
 
-void Display_info(void)
+void DisplayInfo(void)
 {
 	uint32_t ms = HAL_GetTick();
 	bool key1_state = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_0);
@@ -86,7 +86,7 @@ void Display_info(void)
 	{
 	    long_state1 = true;
 	    // действие на длинное нажатие
-//	    SEND_str("LONG_PRESS_BT1\n");
+//	    SendStr("LONG_PRESS_BT1\n");
 	}
 	else if(key2_state == false && !long_state2 && (ms - time_key2) > 2000)
 	{
@@ -96,7 +96,7 @@ void Display_info(void)
 		display_Sleep = false;
 	  	What_Time = 0;
 
-//	    SEND_str("LONG_PRESS_BT2\n");
+//	    SendStr("LONG_PRESS_BT2\n");
 	}
 	else if(key3_state == false && !long_state3 && (ms - time_key3) > 2000)
 	{
@@ -108,13 +108,13 @@ void Display_info(void)
 	  	reserve_Current = Current * 1.25;	//Уставка по току плюс 25%
 	  	//Вызвать функцию сохранения уставки по току!!!
 
-//	  	SEND_str("-------------------------\n");
-//	  	SEND_str("| ");
-	  	SEND_str("SETPOINT: ");
+//	  	SendStr("-------------------------\n");
+//	  	SendStr("| ");
+	  	SendStr("SETPOINT: ");
 	  	snprintf(trans_str, 63, "%.2fA\n", reserve_Current);
-	  	SEND_str(trans_str);
-//	  	SEND_str(" |\n");
-//	  	SEND_str("-------------------------\n");
+	  	SendStr(trans_str);
+//	  	SendStr(" |\n");
+//	  	SendStr("-------------------------\n");
 
 	  	ssd1306_SetCursor(42, 23);
 	  	ssd1306_WriteString("SAVE", Font_11x18, White);
@@ -125,7 +125,7 @@ void Display_info(void)
 
 	  	What_Time = 0;
 
-//	    SEND_str("LONG_PRESS_BT3\n");
+//	    SendStr("LONG_PRESS_BT3\n");
 	}
 	else if(key1_state == true && short_state1 && (ms - time_key1) > 100)
 	{
@@ -154,7 +154,7 @@ void Display_info(void)
 			  	}
 		  	}
 		  	What_Time = 0;
-//	    	SEND_str("SHORT_PRESS_BT1\n");
+//	    	SendStr("SHORT_PRESS_BT1\n");
 	    }
 	}
 	else if(key2_state == true && short_state2 && (ms - time_key2) > 100)
@@ -172,7 +172,7 @@ void Display_info(void)
 		  		ssd1306_UpdateScreen(&hi2c2);
 		  	}
 		  	What_Time = 0;
-//	    	SEND_str("SHORT_PRESS_BT2\n");
+//	    	SendStr("SHORT_PRESS_BT2\n");
 	    }
 	}
 	else if(key3_state == true && short_state3 && (ms - time_key3) > 100)
@@ -190,7 +190,7 @@ void Display_info(void)
 			  	ssd1306_UpdateScreen(&hi2c2);
 		  	}
 		  	What_Time = 0;
-//	    	SEND_str("SHORT_PRESS_BT3\n");
+//	    	SendStr("SHORT_PRESS_BT3\n");
 	    }
 	}
 //	if(LEFT_NUM_DOWN)
@@ -254,13 +254,13 @@ void Display_info(void)
 //			  	reserve_Current = Current * 1.25;	//Уставка по току плюс 25%
 //			  	//Вызвать функцию сохранения уставки по току!!!
 //
-//			  	SEND_str("-------------------------\n");
-//			  	SEND_str("| ");
-//			  	 SEND_str("SETPOINT: ");
+//			  	SendStr("-------------------------\n");
+//			  	SendStr("| ");
+//			  	 SendStr("SETPOINT: ");
 //		    	snprintf(trans_str, 63, "%.2fA", reserve_Current);
-//		    	SEND_str(trans_str);
-//		    	SEND_str(" |\n");
-//		    	SEND_str("-------------------------\n");
+//		    	SendStr(trans_str);
+//		    	SendStr(" |\n");
+//		    	SendStr("-------------------------\n");
 //
 //			  	ssd1306_SetCursor(42, 23);
 //			  	ssd1306_WriteString("SAVE", Font_11x18, White);

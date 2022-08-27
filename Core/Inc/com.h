@@ -10,8 +10,8 @@
 
 #include "main.h"
 
-void USART_Tx(unsigned char Data);
-void SEND_str(char * string);
-void DEBUG_main(void);
+void UsartTx(unsigned char Data);
+void SendStr(char * string);
+void DebugMain(void);
 
 #endif /* INC_COM_H_ */
