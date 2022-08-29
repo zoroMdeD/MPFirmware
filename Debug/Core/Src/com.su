@@ -1,4 +1,4 @@
-../Core/Src/com.c:22:6:clear_string	24	static
-../Core/Src/com.c:44:6:USART_Tx	16	static
-../Core/Src/com.c:51:6:SEND_str	24	static
-../Core/Src/com.c:61:6:DEBUG_main	16	static
+../Core/Src/com.c:14:6:clearString	24	static
+../Core/Src/com.c:36:6:UsartTx	16	static
+../Core/Src/com.c:43:6:SendStr	24	static
+../Core/Src/com.c:53:6:DebugMain	16	static

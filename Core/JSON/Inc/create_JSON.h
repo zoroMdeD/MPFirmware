@@ -14,5 +14,6 @@
 //#include "../Inc/create_JSON.h"
 
 void test_create_json(void);
+void SaveConfigJson(void);
 
 #endif /* JSON_INC_CREATE_JSON_H_ */

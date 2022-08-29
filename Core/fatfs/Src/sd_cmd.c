@@ -16,6 +16,8 @@ extern uint32_t firmwareBytesToWrite;
 extern uint32_t firmwareBytesCounter;
 
 extern bool check_init;
+extern char DateTime[];
+extern int LaunchNum;
 
 uint8_t readBuffer[512];	//Буфер для хранения прочитанных с карты данных
 uint8_t WriteBuffer[248];
@@ -24,18 +26,20 @@ uint32_t BytesCounter = 0;	//Счетчик кол-ва прочитанных �
 UINT readBytes = 0;			//Счетчик кол-ва прочитанных данных
 UINT WriteBytes = 0;		//Счетчик кол-ва записанных данных
 
+extern bool LogFileCreate;
+
 //Функция инициализации карты памяти
-void my_init_card(void)
+void MyInitCard(void)
 {
 //	SD_PowerOn();
 	sd_ini();
 }
 //Функция чтения файла с карты памяти
-void my_read_file(void)
+void MyReadFile(void)
 {
 	if (f_mount(0, &FATFS_Obj) == FR_OK)	//Монтируем модуль FatFs
 	{
-		SEND_str("f_mount -> success\n");
+		SendStr("f_mount -> success\n");
 
 		uint8_t path[18]="JSON_voltage.json";
 		path[17] = '\0';
@@ -44,13 +48,13 @@ void my_read_file(void)
 
 		if(result == FR_OK)
 		{
-			SEND_str("f_open -> success\n");
+			SendStr("f_open -> success\n");
 
 			BytesToRead = MyFile.fsize;
 
 			char str1[60];
 			sprintf(str1, "file_Size: %d Byte\n", BytesToRead);
-			SEND_str(str1);
+			SendStr(str1);
 
 			BytesCounter = 0;
 			while ((BytesToRead - BytesCounter) >= 512)
@@ -71,11 +75,11 @@ void my_read_file(void)
 //			result = f_read(&test, readBuffer, sizeof(readBuffer), &readBytes);
 //			if(result == FR_OK)
 //			{
-//				SEND_str("f_read -> success\n");
-//				SEND_str(readBuffer);
-//				SEND_str("\n");
+//				SendStr("f_read -> success\n");
+//				SendStr(readBuffer);
+//				SendStr("\n");
 //				sprintf(str1,"BytesToRead: %d\n",readBytes);
-//				SEND_str(str1);
+//				SendStr(str1);
 //			}
 		    f_close(&MyFile);
 //		    f_unlink((char*)path);
@@ -85,37 +89,116 @@ void my_read_file(void)
 //Функция записи файла на карту памяти
 //Принимает "path" - указатель на имя файла
 //Принимает "text" - указатель на строку JSON, которую нужно сохранить
-void my_write_file_json(char *path, char *text)
+void MyWriteFileJson(char *path, char *text)
 {
 	if (f_mount(0, &FATFS_Obj) == FR_OK)
 	{
-		SEND_str("f_mount -> success\n");
+		SendStr("f_mount -> success\n");
 
 		result = f_open(&MyFile, path + '\0', FA_CREATE_ALWAYS|FA_WRITE);
 
 		if(result == FR_OK)
 		{
-			SEND_str("f_open -> success\n");
+			SendStr("f_open -> success\n");
 
 			result = f_write(&MyFile, text, strlen(text), &WriteBytes);
 			if(result == FR_OK)
 			{
-				SEND_str("f_write -> success\n");
+				SendStr("f_write -> success\n");
 
 				char str1[60];
 				sprintf(str1, "write_bytes: %d Byte\n", WriteBytes);
-				SEND_str(str1);
+				SendStr(str1);
 			}
 		    f_close(&MyFile);
 		}
 	}
+}
+//Создание файла логов если такового не на карте памяти
+//Функция принимает имя файла логов
+//Default name: LogFile.txt
+void CreateLogFile(char *name)
+{
+	char text[4096];
+	sprintf(text, "<< ManagePower version firmware %s log-file %s >>\n"
+				  "------------------------------------------------------------------"
+				  "%s	--->	ManagePower launch number %d\n"
+				  "%s	--->	Configuration:\n"
+				  "\t\t\t\tSETPOINT: %.2f,\n"
+				  "\t\t\t\tSEQUENCE: %s,\n"
+				  "\t\t\t\tCOUPWORK: %s,\n"
+				  "\t\t\t\tHIGHPRIORITY: %s,\n"
+				  "\t\t\t\tHANDCTRL: %s,\n"
+				  "\t\t\t\tDUTYCYCLE: %s\n", Config.VERSIONFIRMWARE, DateTime,
+				  	  	  	  	  	  	  	 DateTime, LaunchNum,
+											 DateTime,
+											 Config.SETPOINT,
+											 Config.SEQUENCE,
+											 Config.COUPWORK,
+											 Config.HIGHPRIORITY,
+											 Config.HANDCTRL,
+											 Config.DUTYCYCLE);
+
+	if(!LogFileCreate)
+	{
+		if (f_mount(0, &FATFS_Obj) == FR_OK)
+		{
+			result = f_open(&MyFile, name + '\0', FA_CREATE_ALWAYS | FA_WRITE);
+			if(result == FR_OK)
+			{
+				result = f_write(&MyFile, text, 256, &WriteBytes);
+
+				LogFileCreate = true;
+			}
+		}
+	}
+	FlClose();
+}
+//Функция добавления логов в созданный ранее файл
+//Функция принимает имя файла куда дописать
+//Принимает текст который надо дописать в файл
+int AddToLogFile(char *name, char *text)
+{
+	if (f_mount(0, &FATFS_Obj) == FR_OK)
+	{
+		result = f_open(&MyFile, name + '\0', FA_OPEN_ALWAYS | FA_WRITE);
+		if(result == FR_OK)
+		{
+			firmwareBytesCounter = 0;
+			uint16_t size = strlen(text);
+			result = f_lseek(&MyFile, MyFile.fsize);	//Поиск конца файла
+			if(result == FR_OK)
+			{
+				if((size - firmwareBytesCounter) >= 256)	//default: 248
+				{
+					result = f_write(&MyFile, text, 256, &WriteBytes);
+					firmwareBytesCounter += 256;
+					if(firmwareBytesCounter == size)
+					{
+						f_close(&MyFile);
+						Config.LOGFILE = false;
+						return SUCCESS;
+					}
+				}
+				else if (size != firmwareBytesCounter)
+				{
+					result = f_write(&MyFile, text, (size - firmwareBytesCounter) , &WriteBytes);
+					firmwareBytesCounter = size;
+					f_close(&MyFile);
+					Config.LOGFILE = false;
+					return SUCCESS;
+				}
+			}
+		}
+	}
+	return ERROR;
 }
 //Функция записи файла прошивки .bin на карту памяти
 //Принимает "path" - указатель на имя файла
 //Принимает "data_bytes" - указатель на буффер данных, которые нужно сохранить
 //Принимает "crc32" - контрольную сумму принимаемого пакеда данных
 //Возвращает статус контроля целостности данных
-//char *my_write_file_firmware(char *name, char *data_bytes, uint32_t crc32)
+//char *MyWriteFileFirmware(char *name, char *data_bytes, uint32_t crc32)
 //{
 //	if(!check_init)
 //	{
@@ -164,7 +247,7 @@ void my_write_file_json(char *path, char *text)
 //	return FW_UPD_ERROR;
 //}
 //Функция закрытия файла
-void fl_close(void)
+void FlClose(void)
 {
     f_close(&MyFile);
 }
@@ -190,44 +273,8 @@ void save_dido(char *D_IN, char *text)
 {
 	char name_FIL[32];
 
-	SEND_str(text);
+	SendStr(text);
 	sprintf(name_FIL,"%s%s.json", D_IN, "(DiDo)");
-	SEND_str(name_FIL);
-	my_write_file_json(name_FIL, text);
-}
-//Функция сохраниения конфигурационных данных (Включить/выключить один цифровой выход(открытый коллектор) если аналоговый вход в интервале значений)
-//Принимает "A_IN" - строку с номером аналогового входа
-//Принимает "text" - указатель на строку JSON
-void save_aido(char *A_IN, char *text)
-{
-	char name_FIL[32];
-
-	SEND_str(text);
-	sprintf(name_FIL,"%s%s.json", A_IN, "(AiDo)");
-	SEND_str(name_FIL);
-	my_write_file_json(name_FIL, text);
-}
-//Функция сохраниения конфигурационных данных (Задать сигнал ШИМ на одном выходе)
-//Принимает "PWM_OUT" - строку с номером ШИМ выхода
-//Принимает "text" - указатель на строку JSON
-void save_pwm(char *PWM_OUT, char *text)
-{
-	char name_FIL[32];
-
-	SEND_str(text);
-	sprintf(name_FIL,"%s.json", PWM_OUT);
-	SEND_str(name_FIL);
-	my_write_file_json(name_FIL, text);
-}
-//Функция сохраниения конфигурационных данных (Включить/выключить один цифровой выход(открытый коллектор) если температура датчика в интервале значений)
-//Принимает "ROM_RAW" - строку с уникальным идентификатором температурного датчика
-//Принимает "text" - указатель на строку JSON
-void save_tsido(char *ROM_RAW, char *text)
-{
-	char name_FIL[32];
-
-	SEND_str(text);
-	sprintf(name_FIL,"%s%s.json", ROM_RAW, "(TSiDo)");
-	SEND_str(name_FIL);
-	my_write_file_json(name_FIL, text);
+	SendStr(name_FIL);
+	MyWriteFileJson(name_FIL, text);
 }
