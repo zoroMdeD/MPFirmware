@@ -55,6 +55,7 @@ uint16_t Compare = 0;
 uint16_t DutyCicle = 4500;	//Уставка до какой скважности увеличивать
 
 //Флаги срабатывания управляющих сигналов
+//---------------------------------------
 bool distHIGHP_flag = true;
 bool handOPEN_flag = true;
 bool handCLOSE_flag = true;
@@ -66,8 +67,9 @@ bool distSTOP_flag = true;
 bool distINT_flag = true;
 
 bool handCTRL_flag = true;
+//---------------------------------------
 
-bool SELF_CAPTURE_flag = true;
+bool SELF_CAPTURE_flag = true;		//Флаг самоподхвата
 
 char trans_str[64] = {0,};
 bool Stop = false;					//Флаг остановки эл.привода
@@ -82,21 +84,18 @@ bool DirMove_OPENmcu = false;		//Флаг движения задвижки на
 bool DirMove_CLOSEmcu = false;		//Флаг движения задвижки на закрытие
 //-------------------------------------------
 //-----------------LCD-----------------------
-bool LEFT_NUM_UP = false;			//Флаг нажатия кнопки "Целые+"
-bool LEFT_NUM_DOWN = false;			//Флаг нажатия кнопки "Целые-"
-bool RIGHT_NUM = false;				//Флаг нажатия кнопки "Десятые+"
 bool info = true;					//Флаг отображения главного меню
 uint8_t time = 0;					//Переменная задержки
-uint16_t What_Time = 0;
-bool display_Off = false;
-bool display_Sleep = false;
-double Current = 0.0;
+uint16_t What_Time = 0;				//Счетчик времени на выполнение необходимых действий
+bool display_Off = false;			//Флаг состояния дисплея
+bool display_Sleep = false;			//Флаг того что дисплей в спящем режиме
+double Current = 0.0;				//Переменная значения выставленного тока
 //-------------------------------------------
 //-----------------ADC-----------------------
 double Amps[3] = {0,};				//Значение тока на фазах (среднее значение)
 volatile uint32_t adc[3] = {0,}; 	//Массив для хранения данных АЦП
 double adcValue[3] = {0,};			//Массив для хранения обработанных данных АЦП
-double reserve_Current = 0.0;
+double reserve_Current = 0.0;		//Переменная значения тока с запасом(уставка по току)
 uint8_t cnt = 0;					//Счетчик кол-ва измеренных значений тока
 bool run_Сomparison = false;
 //-------------------------------------------
@@ -110,8 +109,8 @@ int firmwareBytesCounter = 0;		//Счетчик полной почсылки (2
 
 bool LogFileCreate = false;			//Флаг того что необходимо создать файл логов, false - необходимо создать
 //-------------------------------------------
-char DateTime[64];
-int LaunchNum = 0;
+char DateTime[64];					//Переменная даты и времени
+int LaunchNum = 0;					//Счетчик кол-ва запусков устройства
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -192,9 +191,109 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  //-------------------------------- 1-й блок действий при старте МК --------------------------------
+	  /*
+	   * Проверяем сигнал выбора управления местное/дистанционное
+	   * Если в высоком уровне, то управление местное
+	   * Если в низком уровне то управление дистанционное
+	   *
+	   * handCTRL(GPIOC3): 	Management:
+	   *      High			  Local
+	   *      Low			  Remote
+	   */
+	  if(((GPIOC->IDR & handCTRL_Pin) != 0) && handCTRL_flag)
+	  {
+		  handCTRL_flag = false;
+
+		  distOPEN_flag = false;
+		  distCLOSE_flag = false;
+		  distSTOP_flag = false;
+//		  distINT_flag = false;
+
+		  handOPEN_flag = true;
+		  handCLOSE_flag = true;
+	  }
+	  else if(((GPIOC->IDR & handCTRL_Pin) == 0) && !handCTRL_flag)
+	  {
+		  handCTRL_flag = true;
+
+		  handOPEN_flag = false;
+		  handCLOSE_flag = false;
+
+		  distOPEN_flag = true;
+		  distCLOSE_flag = true;
+		  distSTOP_flag = true;
+//		  distINT_flag = true;
+	  }
+	  //-------------------------------------------------------------------------------------------------
+	  //-------------------------------- 2-й блок действий при старте МК --------------------------------
+	  /*
+	   * Проверяем выбран ли режим работы эл.привода с самоподхватом,
+	   * если режим работы с самоподхватом не выбран, то выставляем флаг, что самоподхват отсудствует,
+	   * если выбран режим с самоподхватом то работаем в обычном режиме
+	   */
+	  if(((GPIOB->IDR & SELF_CAPTURE_Pin) == 0) && SELF_CAPTURE_flag)
+	  {
+		  SELF_CAPTURE_flag = false;
+	  }
+	  else if(((GPIOB->IDR & SELF_CAPTURE_Pin) != 0) && !SELF_CAPTURE_flag)
+	  {
+		  SELF_CAPTURE_flag = true;
+	  }
+	  //-------------------------------------------------------------------------------------------------
+	  //-------------------------------- 3-й блок действий при старте МК --------------------------------
+	  /*
+	   * Проверяем была ли нажата кнопка, и проверяем выключен ли режим самоподхвата,
+	   * если выключен режим самоподхвата, то при отпускании кнопки "ОТКРЫТЬ"
+	   * привод остановиться. Чтобы продолжить движение необходимо снова нажать кнопку "ОТКРЫТЬ"
+	   */
+	  if(!SELF_CAPTURE_flag)
+	  {
+		  if(!handOPEN_flag)
+		  {
+			  if((GPIOC->IDR & handOPEN_Pin) != 0)
+			  {
+				  Stop = true;
+				  handCTRL_flag = true;
+			  }
+		  }
+		  else if(!handCLOSE_flag)
+		  {
+			  if((GPIOC->IDR & handCLOSE_Pin) != 0)
+			  {
+				  Stop = true;
+				  handCTRL_flag = true;
+			  }
+		  }
+		  else if(!distOPEN_flag)
+		  {
+			  if((GPIOB->IDR & distOPEN_Pin) != 0)	// - Проверить правильное ли условие!!!
+			  {
+				  Stop = true;
+				  handCTRL_flag = false;
+			  }
+		  }
+		  else if(!distCLOSE_flag)
+		  {
+			  if((GPIOC->IDR & distCLOSE_Pin) != 0)
+			  {
+				  Stop = true;
+				  handCTRL_flag = false;
+			  }
+		  }
+		  else if(!distSTOP_flag)
+		  {
+			  if((GPIOC->IDR & distSTOP_Pin) != 0)
+			  {
+				  handCTRL_flag = false;
+			  }
+		  }
+	  }
+	  //-------------------------------------------------------------------------------------------------
+	  //------------------------------ Последующие действия при старте МК -------------------------------
+
 	  DirectionMove();
-	  //Придумать как заблокировать режим работы с дисплеем
-	  DisplayInfo();
+	  DisplayInfo();		  //Придумать как заблокировать режим работы с дисплеем
 	  СurrentСomparison();
 	  DebugMain();
 
@@ -214,60 +313,7 @@ int main(void)
 		  Compare = Compare - 10;
 		  HAL_Delay(5);	//Вопрос нужна ли задержка, и какая узнать подробней !!!
 	  }
-	  /*
-	   * Проверяем была ли нажата кнопка, и проверяем выключен ли режим самоподхвата,
-	   * если выключен режим самоподхвата, то при отпускании кнопки "ОТКРЫТЬ"
-	   * привод остановиться. Чтобы продолжить движение необходимо снова нажать кнопку "ОТКРЫТЬ"
-	   */
-	  if(!handOPEN_flag && !SELF_CAPTURE_flag)
-	  {
-		  if((GPIOC->IDR & handOPEN_Pin) != 0)
-		  {
-			  Stop = true;
-			  handOPEN_flag = true;
-		  }
-	  }
-	  else if(!handCLOSE_flag && !SELF_CAPTURE_flag)
-	  {
-		  if((GPIOC->IDR & handCLOSE_Pin) != 0)
-		  {
-			  Stop = true;
-			  handCLOSE_flag = true;
-		  }
-	  }
-	  /*
-	   * Проверяем сигнал выбора управления местное/дистанционное
-	   * Если в высоком уровне, то управление местное
-	   * Если в низком уровне то управление дистанционное
-	   *
-	   * handCTRL(GPIOC3): 	Management:
-	   *      High			  Local
-	   *      Low			  Remote
-	   */
-	  if(((GPIOC->IDR & handCTRL_Pin) != 0) && !handCTRL_flag)
-	  {
-		  handCTRL_flag = true;
-
-		  distOPEN_flag = false;
-		  distCLOSE_flag = false;
-		  distSTOP_flag = false;
-//		  distINT_flag = false;
-
-		  handOPEN_flag = true;
-		  handCLOSE_flag = true;
-	  }
-	  else if(((GPIOC->IDR & handCTRL_Pin) == 0) && handCTRL_flag)
-	  {
-		  handCTRL_flag = false;
-
-		  handOPEN_flag = false;
-		  handCLOSE_flag = false;
-
-		  distOPEN_flag = true;
-		  distCLOSE_flag = true;
-		  distSTOP_flag = true;
-//		  distINT_flag = true;
-	  }
+	  //-------------------------------------------------------------------------------------------------
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

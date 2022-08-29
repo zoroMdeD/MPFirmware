@@ -11,9 +11,6 @@
 #include "../led/Inc/led.h"
 
 extern char trans_str[];
-extern bool LEFT_NUM_UP;				//Флаг нажатия кнопки "Целые+"
-extern bool LEFT_NUM_DOWN;				//Флаг нажатия кнопки "Целые-"
-extern bool RIGHT_NUM;					//Флаг нажатия кнопки "Десятые+"
 extern bool info;						//Флаг главного экрана
 extern uint8_t time;					//Переменная задержки
 extern double Current;

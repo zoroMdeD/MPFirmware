@@ -119,7 +119,7 @@ void MyWriteFileJson(char *path, char *text)
 //Default name: LogFile.txt
 void CreateLogFile(char *name)
 {
-	char text[1024];
+	char text[4096];
 	sprintf(text, "<< ManagePower version firmware %s log-file %s >>\n"
 				  "------------------------------------------------------------------"
 				  "%s	--->	ManagePower launch number %d\n"

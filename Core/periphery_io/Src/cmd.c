@@ -44,16 +44,6 @@ void DirectionMove(void)
 
 		DirMove_OPENmcu = true;
 
-		/*
-		 * Проверяем выбран ли режим работы эл.привода с самоподхватом,
-		 * если режим работы с самоподхватом не выбран, то выставляем флаг, что самоподхват отсудствует,
-		 * если выбран режим с самоподхватом то работаем в обычном режиме
-		 */
-		if((GPIOB->IDR & SELF_CAPTURE_Pin) == 0)
-		{
-			SELF_CAPTURE_flag = false;
-		}
-
 		Compare = 9000;
 
 		/*
@@ -80,11 +70,6 @@ void DirectionMove(void)
 
 		DirMove_CLOSEmcu = true;
 
-		if((GPIOB->IDR & SELF_CAPTURE_Pin) == 0)
-		{
-			SELF_CAPTURE_flag = false;
-		}
-
 		Compare = 9000;
 
 		HAL_Delay(20);
@@ -108,17 +93,5 @@ void DirectionMove(void)
 		HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_4);	//Stop timer four channel four	(CREV)
 
 		Stop = false;
-
-		if((GPIOC->IDR & handCTRL_Pin) != 0)
-		{
-			handOPEN_flag = true;
-			handCLOSE_flag = true;
-		}
-		else
-		{
-			distOPEN_flag = true;
-			distCLOSE_flag = true;
-			distSTOP_flag = true;
-		}
 	}
 }
