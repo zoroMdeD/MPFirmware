@@ -10,7 +10,7 @@
 
 #include "main.h"
 
-double Conversion_ADC1(uint16_t ADC_value);
-void Сurrent_Сomparison(void);
+double ConversionADC(uint16_t ADC_value);
+void СurrentСomparison(void);
 
 #endif /* PERIPHERY_IO_INC_DATA_PROCESS_H_ */

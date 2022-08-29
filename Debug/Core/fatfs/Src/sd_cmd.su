@@ -1,9 +1,8 @@
-../Core/fatfs/Src/sd_cmd.c:28:6:my_init_card	8	static
-../Core/fatfs/Src/sd_cmd.c:34:6:my_read_file	96	static
-../Core/fatfs/Src/sd_cmd.c:88:6:my_write_file_json	80	static
-../Core/fatfs/Src/sd_cmd.c:167:6:fl_close	8	static
-../Core/fatfs/Src/sd_cmd.c:174:6:str2hexStr	24	static
-../Core/fatfs/Src/sd_cmd.c:189:6:save_dido	48	static
-../Core/fatfs/Src/sd_cmd.c:201:6:save_aido	48	static
-../Core/fatfs/Src/sd_cmd.c:213:6:save_pwm	48	static
-../Core/fatfs/Src/sd_cmd.c:225:6:save_tsido	48	static
+../Core/fatfs/Src/sd_cmd.c:32:6:MyInitCard	8	static
+../Core/fatfs/Src/sd_cmd.c:38:6:MyReadFile	96	static
+../Core/fatfs/Src/sd_cmd.c:92:6:MyWriteFileJson	80	static
+../Core/fatfs/Src/sd_cmd.c:120:6:CreateLogFile	4184	static
+../Core/fatfs/Src/sd_cmd.c:160:5:AddToLogFile	24	static
+../Core/fatfs/Src/sd_cmd.c:250:6:FlClose	8	static
+../Core/fatfs/Src/sd_cmd.c:257:6:str2hexStr	24	static
+../Core/fatfs/Src/sd_cmd.c:272:6:save_dido	48	static

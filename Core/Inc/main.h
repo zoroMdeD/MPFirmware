@@ -45,6 +45,7 @@ extern "C" {
 #include "com.h"
 #include "usart_ring.h"
 #include "../periphery_io/Inc/data_process.h"
+#include "../periphery_io/Inc/cmd.h"
 #include "../JSON/Inc/cJSON.h"
 #include "../JSON/Inc/input_JSON.h"
 #include "../JSON/Inc/create_JSON.h"
@@ -62,6 +63,34 @@ extern "C" {
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
 
+	/*
+	 * <<Phase(A)>>
+	 * htim2 -> TIM_CHANNEL_1 = Phase Impulse Modulation phase A forward	-	(AFWD) 			-	PA15
+	 * htim2 -> TIM_CHANNEL_4 = Phase Impulse Modulation phase A reverse	-	(AREV)			-	PA3
+	 * Trigger Source = Zero crossing phase A 								-	(A_ZeroCross)	-	PB3
+	 *
+	 * <<Phase(B)>>
+	 * htim3 -> TIM_CHANNEL_1 = Phase Impulse Modulation phase B forward	-	(BFWD) 			-	PB4
+	 * Trigger Source = Zero crossing phase B 								-	(B_ZeroCross)	-	PB5
+	 *
+	 * <<Phase(C)>>
+	 * htim4 -> TIM_CHANNEL_1 = Phase Impulse Modulation phase C forward	-	(CFWD) 			-	PB6
+	 * htim4 -> TIM_CHANNEL_4 = Phase Impulse Modulation phase C reverse	-	(CREV)			-	PB9
+	 * Trigger Source = Zero crossing phase C 								-	(C_ZeroCross)	-	PB7
+	 */
+
+//Settings firmware
+extern struct ConfigurationSystem
+{
+	double SETPOINT;		//Уставка по току по превышению которой останавливаем работу эл.привода
+	char *SEQUENCE;			//Флаг правильности чередования фаз(правильно ли расключили колодки)
+	char *COUPWORK;			//Флаг работаем по муфте или нет
+	char *VERSIONFIRMWARE;	//Версия прошивки
+	char *HIGHPRIORITY;
+	char *HANDCTRL;
+	char *DUTYCYCLE;
+	bool LOGFILE;			//Флаг необходимости дополнить логфайл
+}Config;
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
@@ -84,14 +113,22 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define distCLOSE_Pin GPIO_PIN_13
 #define distCLOSE_GPIO_Port GPIOC
+#define distCLOSE_EXTI_IRQn EXTI15_10_IRQn
 #define distSTOP_Pin GPIO_PIN_14
 #define distSTOP_GPIO_Port GPIOC
+#define distSTOP_EXTI_IRQn EXTI15_10_IRQn
 #define distINT_Pin GPIO_PIN_15
 #define distINT_GPIO_Port GPIOC
+#define distINT_EXTI_IRQn EXTI15_10_IRQn
+#define distHIGHP_Pin GPIO_PIN_0
+#define distHIGHP_GPIO_Port GPIOC
+#define distHIGHP_EXTI_IRQn EXTI0_IRQn
 #define handOPEN_Pin GPIO_PIN_1
 #define handOPEN_GPIO_Port GPIOC
+#define handOPEN_EXTI_IRQn EXTI1_IRQn
 #define handCLOSE_Pin GPIO_PIN_2
 #define handCLOSE_GPIO_Port GPIOC
+#define handCLOSE_EXTI_IRQn EXTI2_IRQn
 #define handCTRL_Pin GPIO_PIN_3
 #define handCTRL_GPIO_Port GPIOC
 #define A_Current_Pin GPIO_PIN_0
@@ -114,21 +151,18 @@ void Error_Handler(void);
 #define CD_GPIO_Port GPIOC
 #define BT1_Pin GPIO_PIN_0
 #define BT1_GPIO_Port GPIOB
-#define BT1_EXTI_IRQn EXTI0_IRQn
 #define BT2_Pin GPIO_PIN_1
 #define BT2_GPIO_Port GPIOB
-#define BT2_EXTI_IRQn EXTI1_IRQn
 #define BT3_Pin GPIO_PIN_2
 #define BT3_GPIO_Port GPIOB
-#define BT3_EXTI_IRQn EXTI2_IRQn
 #define SCL_Pin GPIO_PIN_10
 #define SCL_GPIO_Port GPIOB
 #define SDA_Pin GPIO_PIN_11
 #define SDA_GPIO_Port GPIOB
-#define SELFP_CLOSEmcu_Pin GPIO_PIN_12
-#define SELFP_CLOSEmcu_GPIO_Port GPIOB
-#define SELFP_OPENmcu_Pin GPIO_PIN_13
-#define SELFP_OPENmcu_GPIO_Port GPIOB
+#define SELF_CAPTURE_Pin GPIO_PIN_12
+#define SELF_CAPTURE_GPIO_Port GPIOB
+#define COUPLING_WORK_Pin GPIO_PIN_13
+#define COUPLING_WORK_GPIO_Port GPIOB
 #define HIGHP_CLOSEmcu_Pin GPIO_PIN_14
 #define HIGHP_CLOSEmcu_GPIO_Port GPIOB
 #define HIGHP_OPENmcu_Pin GPIO_PIN_15
@@ -149,26 +183,23 @@ void Error_Handler(void);
 #define RxD_GPIO_Port GPIOA
 #define CLOSEmcu_Pin GPIO_PIN_11
 #define CLOSEmcu_GPIO_Port GPIOA
+#define CLOSEmcu_EXTI_IRQn EXTI15_10_IRQn
 #define OPENmcu_Pin GPIO_PIN_12
 #define OPENmcu_GPIO_Port GPIOA
+#define OPENmcu_EXTI_IRQn EXTI15_10_IRQn
 #define AFWD_Pin GPIO_PIN_15
 #define AFWD_GPIO_Port GPIOA
 #define WIRE_TxD_Pin GPIO_PIN_10
 #define WIRE_TxD_GPIO_Port GPIOC
 #define WIRE_RxD_Pin GPIO_PIN_11
 #define WIRE_RxD_GPIO_Port GPIOC
-#define A_ZeroCross_Pin GPIO_PIN_3
-#define A_ZeroCross_GPIO_Port GPIOB
 #define BFWD_Pin GPIO_PIN_4
 #define BFWD_GPIO_Port GPIOB
-#define B_ZeroCross_Pin GPIO_PIN_5
-#define B_ZeroCross_GPIO_Port GPIOB
 #define CFWD_Pin GPIO_PIN_6
 #define CFWD_GPIO_Port GPIOB
-#define C_ZeroCross_Pin GPIO_PIN_7
-#define C_ZeroCross_GPIO_Port GPIOB
 #define distOPEN_Pin GPIO_PIN_8
 #define distOPEN_GPIO_Port GPIOB
+#define distOPEN_EXTI_IRQn EXTI9_5_IRQn
 #define CREV_Pin GPIO_PIN_9
 #define CREV_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */

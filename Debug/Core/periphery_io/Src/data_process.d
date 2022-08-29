@@ -26,15 +26,19 @@ Core/periphery_io/Src/data_process.o: \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_flash_ex.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_i2c.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h \
+ ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rtc.h \
+ ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rtc_ex.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_spi.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h \
+ ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_wwdg.h \
  ../Core/Inc/adc.h ../Core/Inc/main.h ../Core/Inc/dma.h ../Core/Inc/i2c.h \
  ../Core/Inc/spi.h ../Core/Inc/tim.h ../Core/Inc/usart.h \
  ../Core/Inc/gpio.h ../Core/Inc/com.h ../Core/Inc/usart_ring.h \
  ../Core/Inc/../periphery_io/Inc/data_process.h \
- ../Core/Inc/../JSON/Inc/cJSON.h ../Core/Inc/../JSON/Inc/input_JSON.h \
+ ../Core/Inc/../periphery_io/Inc/cmd.h ../Core/Inc/../JSON/Inc/cJSON.h \
+ ../Core/Inc/../JSON/Inc/input_JSON.h \
  ../Core/Inc/../JSON/Inc/create_JSON.h ../Core/Inc/../led/Inc/ssd1306.h \
  ../Core/Inc/../led/Inc/fonts.h ../Core/Inc/../led/Inc/fonts.h \
  ../Core/Inc/../led/Inc/led.h ../Core/Inc/../../Core/fatfs/Inc/sd_cmd.h \
@@ -71,10 +75,13 @@ Core/periphery_io/Src/data_process.o: \
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_flash_ex.h:
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_i2c.h:
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h:
+../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rtc.h:
+../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rtc_ex.h:
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_spi.h:
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h:
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h:
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h:
+../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_wwdg.h:
 ../Core/Inc/adc.h:
 ../Core/Inc/main.h:
 ../Core/Inc/dma.h:
@@ -86,6 +93,7 @@ Core/periphery_io/Src/data_process.o: \
 ../Core/Inc/com.h:
 ../Core/Inc/usart_ring.h:
 ../Core/Inc/../periphery_io/Inc/data_process.h:
+../Core/Inc/../periphery_io/Inc/cmd.h:
 ../Core/Inc/../JSON/Inc/cJSON.h:
 ../Core/Inc/../JSON/Inc/input_JSON.h:
 ../Core/Inc/../JSON/Inc/create_JSON.h:

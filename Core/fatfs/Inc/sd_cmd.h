@@ -10,11 +10,13 @@
 
 #include "main.h"
 
-void my_init_card(void);
-void my_read_file(void);
-void my_write_file_json(char *path, char *text);
-char *my_write_file_firmware(char *name, char *data_bytes, uint32_t crc32);
-void fl_close(void);
+void MyInitCard(void);
+void MyReadFile(void);
+void MyWriteFileJson(char *path, char *text);
+char *MyWriteFileFirmware(char *name, char *data_bytes, uint32_t crc32);
+void FlClose(void);
+void CreateLogFile(char *name);
+int AddToLogFile(char *name, char *text);
 void save_dido(char *D_IN, char *text);
 void save_aido(char *A_IN, char *text);
 void save_pwm(char *PWM_OUT, char *text);

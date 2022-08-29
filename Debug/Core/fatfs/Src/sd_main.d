@@ -25,16 +25,20 @@ Core/fatfs/Src/sd_main.o: ../Core/fatfs/Src/sd_main.c \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_flash_ex.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_i2c.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h \
+ ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rtc.h \
+ ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rtc_ex.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_spi.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h \
+ ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_wwdg.h \
  ../Core/Inc/../Inc/adc.h ../Core/Inc/../Inc/main.h \
  ../Core/Inc/../Inc/dma.h ../Core/Inc/../Inc/i2c.h \
  ../Core/Inc/../Inc/spi.h ../Core/Inc/../Inc/tim.h \
  ../Core/Inc/../Inc/usart.h ../Core/Inc/../Inc/gpio.h \
  ../Core/Inc/../Inc/com.h ../Core/Inc/../Inc/usart_ring.h \
  ../Core/Inc/../Inc/../periphery_io/Inc/data_process.h ../Core/Inc/main.h \
+ ../Core/Inc/../Inc/../periphery_io/Inc/cmd.h \
  ../Core/Inc/../Inc/../JSON/Inc/cJSON.h \
  ../Core/Inc/../Inc/../JSON/Inc/input_JSON.h \
  ../Core/Inc/../Inc/../JSON/Inc/create_JSON.h \
@@ -76,10 +80,13 @@ Core/fatfs/Src/sd_main.o: ../Core/fatfs/Src/sd_main.c \
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_flash_ex.h:
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_i2c.h:
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h:
+../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rtc.h:
+../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rtc_ex.h:
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_spi.h:
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h:
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h:
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h:
+../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_wwdg.h:
 ../Core/Inc/../Inc/adc.h:
 ../Core/Inc/../Inc/main.h:
 ../Core/Inc/../Inc/dma.h:
@@ -92,6 +99,7 @@ Core/fatfs/Src/sd_main.o: ../Core/fatfs/Src/sd_main.c \
 ../Core/Inc/../Inc/usart_ring.h:
 ../Core/Inc/../Inc/../periphery_io/Inc/data_process.h:
 ../Core/Inc/main.h:
+../Core/Inc/../Inc/../periphery_io/Inc/cmd.h:
 ../Core/Inc/../Inc/../JSON/Inc/cJSON.h:
 ../Core/Inc/../Inc/../JSON/Inc/input_JSON.h:
 ../Core/Inc/../Inc/../JSON/Inc/create_JSON.h:
