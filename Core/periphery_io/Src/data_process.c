@@ -49,8 +49,6 @@ void СurrentСomparison(void)
       	adcValue[0] = 0.0;
       	adcValue[1] = 0.0;
       	adcValue[2] = 0.0;
-//    	snprintf(trans_str, 63, "%.2fA\n", Amps[0]);
-//    	SEND_str(trans_str);
 
     	cnt = 0;
     }

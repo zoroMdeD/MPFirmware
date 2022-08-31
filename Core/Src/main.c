@@ -60,13 +60,21 @@ bool distHIGHP_flag = true;
 bool handOPEN_flag = true;
 bool handCLOSE_flag = true;
 bool distOPEN_flag = true;
-bool CLOSEmcu_flag = true;
-bool OPENmcu_flag = true;
+bool CLOSEmcu_flag =false;
+bool OPENmcu_flag = false;
 bool distCLOSE_flag = true;
 bool distSTOP_flag = true;
 bool distINT_flag = true;
 
 bool handCTRL_flag = true;
+
+//Флаги правильности подключения фаз
+bool A = false;
+bool B = false;
+bool C = false;
+
+//bool CloseBlink = false;			//Флаг блинкера на закрытие
+//bool OpenBlink = false;			//Флаг блинкера на открытие
 //---------------------------------------
 
 bool SELF_CAPTURE_flag = true;		//Флаг самоподхвата
@@ -86,6 +94,7 @@ bool DirMove_CLOSEmcu = false;		//Флаг движения задвижки н�
 //-----------------LCD-----------------------
 bool info = true;					//Флаг отображения главного меню
 uint8_t time = 0;					//Переменная задержки
+uint8_t Blink = 0;
 uint16_t What_Time = 0;				//Счетчик времени на выполнение необходимых действий
 bool display_Off = false;			//Флаг состояния дисплея
 bool display_Sleep = false;			//Флаг того что дисплей в спящем режиме
@@ -182,137 +191,53 @@ int main(void)
 	MyInitCard();
 	SendStr("Init sd card -> success\n");
 	//------------------------------------------
-	HAL_GPIO_WritePin(GPIOC, mcuREADY_Pin, SET);	//Индикация, МК работает нормально
-  /* USER CODE END 2 */
 
-	//Записать в лог-файл число запусков после обесточивания эл.привода(теоретически кол-во открытий крышки привода)
+	HAL_GPIO_WritePin(GPIOC, mcuREADY_Pin, SET);	//Статус, МК работает нормально
+
+	//Считываем значение с пина управления
+	handCTRL_flag = GPIOC->IDR & handCTRL_Pin;
+	if(handCTRL_flag)
+	{
+		distOPEN_flag = false;
+		distCLOSE_flag = false;
+		distSTOP_flag = false;
+	//	  	distINT_flag = false;
+
+		handOPEN_flag = true;
+		handCLOSE_flag = true;
+	}
+	else if(!handCTRL_flag)
+	{
+		distOPEN_flag = true;
+		distCLOSE_flag = true;
+		distSTOP_flag = true;
+	//	  	distINT_flag = false;
+
+		handOPEN_flag = false;
+		handCLOSE_flag = false;
+	}
+	//Считываем значение с пина самоподхвата
+	SELF_CAPTURE_flag = GPIOB->IDR & SELF_CAPTURE_Pin;
+	if(SELF_CAPTURE_flag)
+		SELF_CAPTURE_flag = true;
+	else if(!SELF_CAPTURE_flag)
+		SELF_CAPTURE_flag = false;
+  /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  //-------------------------------- 1-й блок действий при старте МК --------------------------------
-	  /*
-	   * Проверяем сигнал выбора управления местное/дистанционное
-	   * Если в высоком уровне, то управление местное
-	   * Если в низком уровне то управление дистанционное
-	   *
-	   * handCTRL(GPIOC3): 	Management:
-	   *      High			  Local
-	   *      Low			  Remote
-	   */
-	  if(((GPIOC->IDR & handCTRL_Pin) != 0) && handCTRL_flag)
-	  {
-		  handCTRL_flag = false;
+	  DisplayInfo();		  //Придумать как заблокировать режим работы с дисплеем
 
-		  distOPEN_flag = false;
-		  distCLOSE_flag = false;
-		  distSTOP_flag = false;
-//		  distINT_flag = false;
-
-		  handOPEN_flag = true;
-		  handCLOSE_flag = true;
-	  }
-	  else if(((GPIOC->IDR & handCTRL_Pin) == 0) && !handCTRL_flag)
-	  {
-		  handCTRL_flag = true;
-
-		  handOPEN_flag = false;
-		  handCLOSE_flag = false;
-
-		  distOPEN_flag = true;
-		  distCLOSE_flag = true;
-		  distSTOP_flag = true;
-//		  distINT_flag = true;
-	  }
-	  //-------------------------------------------------------------------------------------------------
-	  //-------------------------------- 2-й блок действий при старте МК --------------------------------
-	  /*
-	   * Проверяем выбран ли режим работы эл.привода с самоподхватом,
-	   * если режим работы с самоподхватом не выбран, то выставляем флаг, что самоподхват отсудствует,
-	   * если выбран режим с самоподхватом то работаем в обычном режиме
-	   */
-	  if(((GPIOB->IDR & SELF_CAPTURE_Pin) == 0) && SELF_CAPTURE_flag)
-	  {
-		  SELF_CAPTURE_flag = false;
-	  }
-	  else if(((GPIOB->IDR & SELF_CAPTURE_Pin) != 0) && !SELF_CAPTURE_flag)
-	  {
-		  SELF_CAPTURE_flag = true;
-	  }
-	  //-------------------------------------------------------------------------------------------------
-	  //-------------------------------- 3-й блок действий при старте МК --------------------------------
-	  /*
-	   * Проверяем была ли нажата кнопка, и проверяем выключен ли режим самоподхвата,
-	   * если выключен режим самоподхвата, то при отпускании кнопки "ОТКРЫТЬ"
-	   * привод остановиться. Чтобы продолжить движение необходимо снова нажать кнопку "ОТКРЫТЬ"
-	   */
-	  if(!SELF_CAPTURE_flag)
-	  {
-		  if(!handOPEN_flag)
-		  {
-			  if((GPIOC->IDR & handOPEN_Pin) != 0)
-			  {
-				  Stop = true;
-				  handCTRL_flag = true;
-			  }
-		  }
-		  else if(!handCLOSE_flag)
-		  {
-			  if((GPIOC->IDR & handCLOSE_Pin) != 0)
-			  {
-				  Stop = true;
-				  handCTRL_flag = true;
-			  }
-		  }
-		  else if(!distOPEN_flag)
-		  {
-			  if((GPIOB->IDR & distOPEN_Pin) != 0)	// - Проверить правильное ли условие!!!
-			  {
-				  Stop = true;
-				  handCTRL_flag = false;
-			  }
-		  }
-		  else if(!distCLOSE_flag)
-		  {
-			  if((GPIOC->IDR & distCLOSE_Pin) != 0)
-			  {
-				  Stop = true;
-				  handCTRL_flag = false;
-			  }
-		  }
-		  else if(!distSTOP_flag)
-		  {
-			  if((GPIOC->IDR & distSTOP_Pin) != 0)
-			  {
-				  handCTRL_flag = false;
-			  }
-		  }
-	  }
-	  //-------------------------------------------------------------------------------------------------
-	  //------------------------------ Последующие действия при старте МК -------------------------------
+	  ManagementProcess();
+	  SelfCaptureProcess();
+	  DutyCycleProcess();
 
 	  DirectionMove();
-	  DisplayInfo();		  //Придумать как заблокировать режим работы с дисплеем
-	  СurrentСomparison();
+//	  СurrentСomparison();
 	  DebugMain();
 
-	  if((Compare > DutyCicle) && DirMove_OPENmcu)	//Увеличиваем скважность до уставки
-	  {
-		  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, Compare);
-		  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, Compare);
-		  __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_1, Compare);
-		  Compare = Compare - 10;
-		  HAL_Delay(5);	//Вопрос нужна ли задержка, и какая узнать подробней !!!
-	  }
-	  else if((Compare > DutyCicle) && DirMove_CLOSEmcu)	//Увеличиваем скважность до уставки
-	  {
-		  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, Compare);
-		  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, Compare);
-		  __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_4, Compare);
-		  Compare = Compare - 10;
-		  HAL_Delay(5);	//Вопрос нужна ли задержка, и какая узнать подробней !!!
-	  }
 	  //-------------------------------------------------------------------------------------------------
     /* USER CODE END WHILE */
 
@@ -399,6 +324,10 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	else if ((GPIO_Pin == GPIO_PIN_1) && handOPEN_flag)
 	{
 		handOPEN_flag = false;
+
+//		CloseBlink = false;
+//		OpenBlink = true;
+
 		Forward = true;
 
 		HAL_GPIO_WritePin(GPIOC, mcuCLOSE_Pin, RESET);	//Убираем флаг "mcuCLOSE"
@@ -408,10 +337,14 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	else if ((GPIO_Pin == GPIO_PIN_2) && handCLOSE_flag)
 	{
 		handCLOSE_flag = false;
+
+//		OpenBlink = false;
+//		CloseBlink = true;
+
 		Reverse = true;
 
-		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, RESET);	//Убираем флаг "mcuOPEN"
-		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, SET);		//Выставляем флаг "mcuCLOSE"
+		HAL_GPIO_WritePin(GPIOC, mcuOPEN_Pin, RESET);	//Убираем флаг "mcuOPEN"
+		HAL_GPIO_WritePin(GPIOC, mcuCLOSE_Pin, SET);	//Выставляем флаг "mcuCLOSE"
 	}
 
 
@@ -421,21 +354,32 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	//Переход через ноль на фазе "А"
 	else if (GPIO_Pin == GPIO_PIN_3)
 	{
-		if(DirMove_OPENmcu)
+		if(!B && !C)
+			A = true;
+
+		if(DirMove_OPENmcu && ((GPIOA->IDR & OPENmcu_Pin) != 0))
 		{
 			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);	//Stop timer two channel one	(AFWD)
 			HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);	//Run timer two channel one		(AFWD)
 		}
-		else if(DirMove_CLOSEmcu)
+		else if(DirMove_CLOSEmcu && ((GPIOA->IDR & CLOSEmcu_Pin) != 0))
 		{
 			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_4);	//Stop timer two channel four	(AREV)
 			HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);	//Run timer two channel four	(AREV)
 		}
 	}
 	 //Переход через ноль на фазе "B"
-	if (GPIO_Pin == GPIO_PIN_5)
+	else if (GPIO_Pin == GPIO_PIN_5)
 	{
-		if(DirMove_OPENmcu || DirMove_CLOSEmcu)
+		if(A && !C)
+			B = true;
+
+		if(DirMove_OPENmcu && ((GPIOA->IDR & OPENmcu_Pin) != 0))
+		{
+			HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);	//Stop timer three channel one	(BFWD)
+			HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);	//Run timer three channel one	(BFWD)
+		}
+		else if(DirMove_CLOSEmcu && ((GPIOA->IDR & CLOSEmcu_Pin) != 0))
 		{
 			HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);	//Stop timer three channel one	(BFWD)
 			HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);	//Run timer three channel one	(BFWD)
@@ -444,12 +388,15 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	//Переход через ноль на фазе "C"
 	else if (GPIO_Pin == GPIO_PIN_7)
 	{
-		if(DirMove_OPENmcu)
+		if(A && B)
+			C = true;
+
+		if(DirMove_OPENmcu && ((GPIOA->IDR & OPENmcu_Pin) != 0))
 		{
 			HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_1);	//Stop timer Four channel one	(CFWD)
 			HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);	//Run timer four channel one	(CFWD)
 		}
-		else if(DirMove_CLOSEmcu)
+		else if(DirMove_CLOSEmcu && ((GPIOA->IDR & CLOSEmcu_Pin) != 0))
 		{
 			HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_4);	//Stop timer four channel four	(CREV)
 			HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_4);	//Run timer four channel four	(CREV)
@@ -473,11 +420,13 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	else if (GPIO_Pin == GPIO_PIN_11)
 	{
 		Stop = true;
+//		CLOSEmcu_flag = true;
 	}
 	//Флаг того что привод дошел до начала "OPENmcu"
 	else if (GPIO_Pin == GPIO_PIN_12)
 	{
 		Stop = true;
+//		OPENmcu_flag = true;
 	}
 	//Пришла команда "Закрыть" с дистанционного пульта управления (distCLOSE)
 	else if ((GPIO_Pin == GPIO_PIN_13) && distCLOSE_flag)
@@ -485,6 +434,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		distCLOSE_flag = false;
 		Reverse = true;
 
+		//Здесь наверное нужно моргать
 		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, RESET);	//Убираем флаг "mcuOPEN"
 		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, SET);		//Выставляем флаг "mcuCLOSE"
 	}
@@ -512,11 +462,19 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
     if(hadc->Instance == ADC1)	//Убрать все из колбека
     {
     	What_Time++;
+//    	Blink++;
     	cnt++;
     	adcValue[0] += ConversionADC((uint16_t)adc[0]);
         adcValue[1] += ConversionADC((uint16_t)adc[1]);
         adcValue[2] += ConversionADC((uint16_t)adc[2]);
 
+//        if(Blink == 50)	//Раз в 0.5 секунд мигаем
+//        {
+//        	if(OpenBlink)
+//        		HAL_GPIO_TogglePin(GPIOC, mcuOPEN_Pin);		//Статус, задвижка открывается(мигание)
+//        	else if(CloseBlink)
+//        	    HAL_GPIO_TogglePin(GPIOC, mcuCLOSE_Pin);	//Статус, задвижка закрывается(мигание)
+//        }
         if(What_Time == 12000)	//Через 2 минуты отключаем дисплей
         {
         	display_Off = true;
