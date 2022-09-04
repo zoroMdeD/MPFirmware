@@ -121,13 +121,16 @@ void DirectionMove(void)
 		HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_4);	//Stop timer four channel four	(CREV)
 
 		/*
-		 * Если самоподхват установлен
+		 * Если самоподхват не установлен и управление с метного пульта
 		 */
 		if(!SELF_CAPTURE_flag && handCTRL_flag)
 		{
 			handOPEN_flag = true;
 			handCLOSE_flag = true;
 		}
+		/*
+		 * Если управление с дистанционного пульта
+		 */
 		else if(!handCTRL_flag)
 		{
 			distOPEN_flag = true;
@@ -149,7 +152,7 @@ void ManagementProcess(void)
 	 *
 	 * handCTRL(GPIOC3): 	Management:
 	 *      High			  Local
-	 *      Low			  Remote
+	 *      Low			  	 Remote
 	 */
 	handCTRL_flag = GPIOC->IDR & handCTRL_Pin;
 	if(handCTRL_flag && !checkOne)

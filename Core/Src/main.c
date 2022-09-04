@@ -57,21 +57,25 @@ uint16_t DutyCicle = 4500;	//Уставка до какой скважности
 //Флаги срабатывания управляющих сигналов
 //---------------------------------------
 bool distHIGHP_flag = true;
-bool handOPEN_flag = true;
-bool handCLOSE_flag = true;
-bool distOPEN_flag = true;
+bool handOPEN_flag = false;
+bool handCLOSE_flag = false;
+bool distOPEN_flag = false;
 bool CLOSEmcu_flag =false;
 bool OPENmcu_flag = false;
-bool distCLOSE_flag = true;
-bool distSTOP_flag = true;
-bool distINT_flag = true;
+bool distCLOSE_flag = false;
+bool distSTOP_flag = false;
+bool distINT_flag = false;
 
-bool handCTRL_flag = true;
+bool handCTRL_flag = false;
 
 //Флаги правильности подключения фаз
-bool A = false;
-bool B = false;
-bool C = false;
+uint8_t A = 0;
+uint8_t B = 0;
+uint8_t C = 0;
+bool PhCorrect = false;
+bool PhUncorrect = false;
+uint8_t BlinkFail = 0;
+uint16_t BlinkQueue = 0;
 
 //bool CloseBlink = false;			//Флаг блинкера на закрытие
 //bool OpenBlink = false;			//Флаг блинкера на открытие
@@ -94,7 +98,7 @@ bool DirMove_CLOSEmcu = false;		//Флаг движения задвижки н�
 //-----------------LCD-----------------------
 bool info = true;					//Флаг отображения главного меню
 uint8_t time = 0;					//Переменная задержки
-uint8_t Blink = 0;
+uint8_t Blink = 0;					//Счетчик времени для индикации
 uint16_t What_Time = 0;				//Счетчик времени на выполнение необходимых действий
 bool display_Off = false;			//Флаг состояния дисплея
 bool display_Sleep = false;			//Флаг того что дисплей в спящем режиме
@@ -193,6 +197,7 @@ int main(void)
 	//------------------------------------------
 
 	HAL_GPIO_WritePin(GPIOC, mcuREADY_Pin, SET);	//Статус, МК работает нормально
+	HAL_GPIO_WritePin(GPIOA, mcuFAIL_Pin, RESET);	//Сбрасываем ошибку МК
 
 	//Считываем значение с пина управления
 	handCTRL_flag = GPIOC->IDR & handCTRL_Pin;
@@ -218,10 +223,10 @@ int main(void)
 	}
 	//Считываем значение с пина самоподхвата
 	SELF_CAPTURE_flag = GPIOB->IDR & SELF_CAPTURE_Pin;
-	if(SELF_CAPTURE_flag)
-		SELF_CAPTURE_flag = true;
-	else if(!SELF_CAPTURE_flag)
-		SELF_CAPTURE_flag = false;
+//	if(SELF_CAPTURE_flag)
+//		SELF_CAPTURE_flag = true;
+//	else if(!SELF_CAPTURE_flag)
+//		SELF_CAPTURE_flag = false;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -230,12 +235,15 @@ int main(void)
   {
 	  DisplayInfo();		  //Придумать как заблокировать режим работы с дисплеем
 
-	  ManagementProcess();
-	  SelfCaptureProcess();
-	  DutyCycleProcess();
+//	  if(PhCorrect)	//Проверяем правильность включение фаз
+//	  {
+		  ManagementProcess();
+		  SelfCaptureProcess();
+		  DutyCycleProcess();
 
-	  DirectionMove();
-//	  СurrentСomparison();
+		  DirectionMove();
+//	  		СurrentСomparison();
+//	  }
 	  DebugMain();
 
 	  //-------------------------------------------------------------------------------------------------
@@ -298,6 +306,9 @@ void SystemClock_Config(void)
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	//Пришла команда "Высшего приоритета" с дистанционного пульта управления (distHIGHP)
+
+	//Уточнить работает ли высший приоритет когда работаем с местного пульта управления!!!
+
 	if ((GPIO_Pin == GPIO_PIN_0) && distHIGHP_flag)
 	{
 		distHIGHP_flag = false;
@@ -355,7 +366,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	else if (GPIO_Pin == GPIO_PIN_3)
 	{
 		if(!B && !C)
-			A = true;
+			A = 1;
 
 		if(DirMove_OPENmcu && ((GPIOA->IDR & OPENmcu_Pin) != 0))
 		{
@@ -371,8 +382,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	 //Переход через ноль на фазе "B"
 	else if (GPIO_Pin == GPIO_PIN_5)
 	{
-		if(A && !C)
-			B = true;
+		if(A && C)
+			B = 3;
 
 		if(DirMove_OPENmcu && ((GPIOA->IDR & OPENmcu_Pin) != 0))
 		{
@@ -388,8 +399,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	//Переход через ноль на фазе "C"
 	else if (GPIO_Pin == GPIO_PIN_7)
 	{
-		if(A && B)
-			C = true;
+		if(A && !B)
+			C = 2;
 
 		if(DirMove_OPENmcu && ((GPIOA->IDR & OPENmcu_Pin) != 0))
 		{
@@ -462,7 +473,8 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
     if(hadc->Instance == ADC1)	//Убрать все из колбека
     {
     	What_Time++;
-//    	Blink++;
+    	BlinkFail++;
+    	BlinkQueue++;
     	cnt++;
     	adcValue[0] += ConversionADC((uint16_t)adc[0]);
         adcValue[1] += ConversionADC((uint16_t)adc[1]);
@@ -474,6 +486,28 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 //        		HAL_GPIO_TogglePin(GPIOC, mcuOPEN_Pin);		//Статус, задвижка открывается(мигание)
 //        	else if(CloseBlink)
 //        	    HAL_GPIO_TogglePin(GPIOC, mcuCLOSE_Pin);	//Статус, задвижка закрывается(мигание)
+//        }
+//        if(BlinkFail == 100 && PhUncorrect)	//Раз в 1 секунду индикация ошибки(Чередование фаз не прямое)
+//        {
+//        	HAL_GPIO_TogglePin(GPIOA, mcuFAIL_Pin);	//Чередования фаз не прямое
+//        	BlinkFail = 0;
+//        }
+//        if(BlinkQueue == 500)	//Раз в 5 секунд проверяет правильность расключения фаз
+//        {
+//        	if(A < C && B > C)
+//        	{
+//        		HAL_GPIO_WritePin(GPIOA, mcuFAIL_Pin, RESET);	//Чередования фаз не прямое
+//        		HAL_GPIO_WritePin(GPIOC, mcuREADY_Pin, SET);	//Статус, МК работает нормально
+//        		PhCorrect = true;
+//        		PhUncorrect = false;
+//        	}
+//        	else
+//        	{
+//        		HAL_GPIO_WritePin(GPIOC, mcuREADY_Pin, RESET);	//Статус выключаем, МК работает с ошибкой
+//        		PhCorrect = false;
+//        		PhUncorrect = true;
+//        	}
+//        	BlinkQueue = 0;
 //        }
         if(What_Time == 12000)	//Через 2 минуты отключаем дисплей
         {
