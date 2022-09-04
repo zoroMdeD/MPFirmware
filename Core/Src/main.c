@@ -27,7 +27,6 @@
 #include "usart.h"
 #include "wwdg.h"
 #include "gpio.h"
-
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -210,6 +209,9 @@ int main(void)
 
 		handOPEN_flag = true;
 		handCLOSE_flag = true;
+		#if DEBUG_USART
+			SendStr("[1] - Control is local\n");
+		#endif
 	}
 	else if(!handCTRL_flag)
 	{
@@ -220,13 +222,18 @@ int main(void)
 
 		handOPEN_flag = false;
 		handCLOSE_flag = false;
+		#if DEBUG_USART
+			SendStr("[2] - Control is remote\n");
+		#endif
 	}
 	//Считываем значение с пина самоподхвата
 	SELF_CAPTURE_flag = GPIOB->IDR & SELF_CAPTURE_Pin;
-//	if(SELF_CAPTURE_flag)
-//		SELF_CAPTURE_flag = true;
-//	else if(!SELF_CAPTURE_flag)
-//		SELF_CAPTURE_flag = false;
+	#if DEBUG_USART
+		if(SELF_CAPTURE_flag)
+			SendStr("[3] - Self capture is set\n");
+		else if(!SELF_CAPTURE_flag)
+			SendStr("[4] - Self capture is reset\n");
+	#endif
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -311,6 +318,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
 	if ((GPIO_Pin == GPIO_PIN_0) && distHIGHP_flag)
 	{
+		#if DEBUG_USART
+			SendStr("[101] - distHIGHP is action\n");
+		#endif
 		distHIGHP_flag = false;
 		/*
 		 * handCTRL(GPIOC3): 	Management:
@@ -334,6 +344,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	//Пришла команда "Открыть" с местного пульта управления (handOPEN)
 	else if ((GPIO_Pin == GPIO_PIN_1) && handOPEN_flag)
 	{
+		#if DEBUG_USART
+			SendStr("[102] - handOPEN is action\n");
+		#endif
 		handOPEN_flag = false;
 
 //		CloseBlink = false;
@@ -347,6 +360,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	//Пришла команда "Закрыть" с местного пульта управления (handCLOSE)
 	else if ((GPIO_Pin == GPIO_PIN_2) && handCLOSE_flag)
 	{
+		#if DEBUG_USART
+			SendStr("[103] - handCLOSE is action\n");
+		#endif
 		handCLOSE_flag = false;
 
 //		OpenBlink = false;
@@ -370,11 +386,17 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
 		if(DirMove_OPENmcu && ((GPIOA->IDR & OPENmcu_Pin) != 0))
 		{
+			#if DEBUG_USART
+				SendStr("[104] - AFWD\n");
+			#endif
 			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);	//Stop timer two channel one	(AFWD)
 			HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);	//Run timer two channel one		(AFWD)
 		}
 		else if(DirMove_CLOSEmcu && ((GPIOA->IDR & CLOSEmcu_Pin) != 0))
 		{
+			#if DEBUG_USART
+				SendStr("[105] - AREV\n");
+			#endif
 			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_4);	//Stop timer two channel four	(AREV)
 			HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);	//Run timer two channel four	(AREV)
 		}
@@ -387,11 +409,17 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
 		if(DirMove_OPENmcu && ((GPIOA->IDR & OPENmcu_Pin) != 0))
 		{
+			#if DEBUG_USART
+				SendStr("[106] - BFWD\n");
+			#endif
 			HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);	//Stop timer three channel one	(BFWD)
 			HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);	//Run timer three channel one	(BFWD)
 		}
 		else if(DirMove_CLOSEmcu && ((GPIOA->IDR & CLOSEmcu_Pin) != 0))
 		{
+			#if DEBUG_USART
+				SendStr("[107] - BFWD\n");
+			#endif
 			HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);	//Stop timer three channel one	(BFWD)
 			HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);	//Run timer three channel one	(BFWD)
 		}
@@ -404,11 +432,17 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
 		if(DirMove_OPENmcu && ((GPIOA->IDR & OPENmcu_Pin) != 0))
 		{
+			#if DEBUG_USART
+				SendStr("[108] - CFWD\n");
+			#endif
 			HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_1);	//Stop timer Four channel one	(CFWD)
 			HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);	//Run timer four channel one	(CFWD)
 		}
 		else if(DirMove_CLOSEmcu && ((GPIOA->IDR & CLOSEmcu_Pin) != 0))
 		{
+			#if DEBUG_USART
+				SendStr("[109] - CREV\n");
+			#endif
 			HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_4);	//Stop timer four channel four	(CREV)
 			HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_4);	//Run timer four channel four	(CREV)
 		}
@@ -421,6 +455,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	//Пришла команда "Открыть" с дистанционного пульта управления (distOPEN)
 	else if ((GPIO_Pin == GPIO_PIN_8) && distOPEN_flag)
 	{
+		#if DEBUG_USART
+			SendStr("[110] - distOPEN\n");
+		#endif
 		distOPEN_flag = false;
 		Forward = true;
 
@@ -430,18 +467,27 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	//Флаг того что привод дошел до конца "CLOSEmcu"
 	else if (GPIO_Pin == GPIO_PIN_11)
 	{
+		#if DEBUG_USART
+			SendStr("[111] - CLOSEmcu\n");
+		#endif
 		Stop = true;
 //		CLOSEmcu_flag = true;
 	}
 	//Флаг того что привод дошел до начала "OPENmcu"
 	else if (GPIO_Pin == GPIO_PIN_12)
 	{
+		#if DEBUG_USART
+			SendStr("[112] - OPENmcu\n");
+		#endif
 		Stop = true;
 //		OPENmcu_flag = true;
 	}
 	//Пришла команда "Закрыть" с дистанционного пульта управления (distCLOSE)
 	else if ((GPIO_Pin == GPIO_PIN_13) && distCLOSE_flag)
 	{
+		#if DEBUG_USART
+			SendStr("[113] - distCLOSE\n");
+		#endif
 		distCLOSE_flag = false;
 		Reverse = true;
 
@@ -452,6 +498,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	//Пришла команда "Остановить" с дистанционного пульта управления (distSTOP)
 	else if ((GPIO_Pin == GPIO_PIN_14) && distSTOP_flag)
 	{
+		#if DEBUG_USART
+			SendStr("[114] - distSTOP\n");
+		#endif
 		distSTOP_flag = false;
 		Stop = true;
 	}
@@ -511,6 +560,9 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 //        }
         if(What_Time == 12000)	//Через 2 минуты отключаем дисплей
         {
+			#if DEBUG_USART
+				SendStr("[21] - Display is off\n");
+			#endif
         	display_Off = true;
         	What_Time = 0;
         }
