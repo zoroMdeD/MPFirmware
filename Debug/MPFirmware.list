@@ -37,13 +37,13 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING, OCTETS
  16 .debug_macro  0000acc8  00000000  00000000  00053398  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 17 .debug_line   00028822  00000000  00000000  0005e060  2**0
+ 17 .debug_line   00028825  00000000  00000000  0005e060  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_str    0009ba5e  00000000  00000000  00086882  2**0
+ 18 .debug_str    0009ba5e  00000000  00000000  00086885  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .comment      00000050  00000000  00000000  001222e0  2**0
+ 19 .comment      00000050  00000000  00000000  001222e3  2**0
                   CONTENTS, READONLY
- 20 .debug_frame  000080b0  00000000  00000000  00122330  2**2
+ 20 .debug_frame  000080b0  00000000  00000000  00122334  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -4588,26 +4588,30 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
  800239e:	4b81      	ldr	r3, [pc, #516]	; (80025a4 <HAL_GPIO_EXTI_Callback+0x284>)
  80023a0:	2200      	movs	r2, #0
  80023a2:	701a      	strb	r2, [r3, #0]
-
 //		CloseBlink = false;
 //		OpenBlink = true;
 
-		Forward = true;
+//		if((GPIOA->IDR & OPENmcu_Pin) != 0)
+//		{
+			Forward = true;
  80023a4:	4b7c      	ldr	r3, [pc, #496]	; (8002598 <HAL_GPIO_EXTI_Callback+0x278>)
  80023a6:	2201      	movs	r2, #1
  80023a8:	701a      	strb	r2, [r3, #0]
 
-		HAL_GPIO_WritePin(GPIOC, mcuCLOSE_Pin, RESET);	//Убираем флаг "mcuCLOSE"
+			HAL_GPIO_WritePin(GPIOC, mcuCLOSE_Pin, RESET);	//Убираем флаг "mcuCLOSE"
  80023aa:	2200      	movs	r2, #0
  80023ac:	2180      	movs	r1, #128	; 0x80
  80023ae:	4878      	ldr	r0, [pc, #480]	; (8002590 <HAL_GPIO_EXTI_Callback+0x270>)
  80023b0:	f006 fd59 	bl	8008e66 <HAL_GPIO_WritePin>
-		HAL_GPIO_WritePin(GPIOC, mcuOPEN_Pin, SET);		//Выставляем флаг "mcuOPEN"
+			HAL_GPIO_WritePin(GPIOC, mcuOPEN_Pin, SET);		//Выставляем флаг "mcuOPEN"
  80023b4:	2201      	movs	r2, #1
  80023b6:	f44f 7180 	mov.w	r1, #256	; 0x100
  80023ba:	4875      	ldr	r0, [pc, #468]	; (8002590 <HAL_GPIO_EXTI_Callback+0x270>)
  80023bc:	f006 fd53 	bl	8008e66 <HAL_GPIO_WritePin>
  80023c0:	e135      	b.n	800262e <HAL_GPIO_EXTI_Callback+0x30e>
+//		}
+//		else
+//			handOPEN_flag = true;
 	}
 	//Пришла команда "Закрыть" с местного пульта управления (handCLOSE)
 	else if ((GPIO_Pin == GPIO_PIN_2) && handCLOSE_flag)
@@ -4626,21 +4630,22 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
  80023d0:	4b75      	ldr	r3, [pc, #468]	; (80025a8 <HAL_GPIO_EXTI_Callback+0x288>)
  80023d2:	2200      	movs	r2, #0
  80023d4:	701a      	strb	r2, [r3, #0]
-
 //		OpenBlink = false;
 //		CloseBlink = true;
 
-		Reverse = true;
+//		if((GPIOA->IDR & CLOSEmcu_Pin) != 0)
+//		{
+			Reverse = true;
  80023d6:	4b71      	ldr	r3, [pc, #452]	; (800259c <HAL_GPIO_EXTI_Callback+0x27c>)
  80023d8:	2201      	movs	r2, #1
  80023da:	701a      	strb	r2, [r3, #0]
 
-		HAL_GPIO_WritePin(GPIOC, mcuOPEN_Pin, RESET);	//Убираем флаг "mcuOPEN"
+			HAL_GPIO_WritePin(GPIOC, mcuOPEN_Pin, RESET);	//Убираем флаг "mcuOPEN"
  80023dc:	2200      	movs	r2, #0
  80023de:	f44f 7180 	mov.w	r1, #256	; 0x100
  80023e2:	486b      	ldr	r0, [pc, #428]	; (8002590 <HAL_GPIO_EXTI_Callback+0x270>)
  80023e4:	f006 fd3f 	bl	8008e66 <HAL_GPIO_WritePin>
-		HAL_GPIO_WritePin(GPIOC, mcuCLOSE_Pin, SET);	//Выставляем флаг "mcuCLOSE"
+			HAL_GPIO_WritePin(GPIOC, mcuCLOSE_Pin, SET);	//Выставляем флаг "mcuCLOSE"
  80023e8:	2201      	movs	r2, #1
  80023ea:	2180      	movs	r1, #128	; 0x80
  80023ec:	4868      	ldr	r0, [pc, #416]	; (8002590 <HAL_GPIO_EXTI_Callback+0x270>)
@@ -4847,16 +4852,16 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
  8002548:	4b21      	ldr	r3, [pc, #132]	; (80025d0 <HAL_GPIO_EXTI_Callback+0x2b0>)
  800254a:	2200      	movs	r2, #0
  800254c:	701a      	strb	r2, [r3, #0]
-		Forward = true;
+			Forward = true;
  800254e:	4b12      	ldr	r3, [pc, #72]	; (8002598 <HAL_GPIO_EXTI_Callback+0x278>)
  8002550:	2201      	movs	r2, #1
  8002552:	701a      	strb	r2, [r3, #0]
-		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, RESET);	//Убираем флаг "mcuCLOSE"
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, RESET);	//Убираем флаг "mcuCLOSE"
  8002554:	2200      	movs	r2, #0
  8002556:	2180      	movs	r1, #128	; 0x80
  8002558:	480d      	ldr	r0, [pc, #52]	; (8002590 <HAL_GPIO_EXTI_Callback+0x270>)
  800255a:	f006 fc84 	bl	8008e66 <HAL_GPIO_WritePin>
-		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, SET);		//Выставляем флаг "mcuOPEN"
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, SET);		//Выставляем флаг "mcuOPEN"
  800255e:	2201      	movs	r2, #1
  8002560:	f44f 7180 	mov.w	r1, #256	; 0x100
  8002564:	480a      	ldr	r0, [pc, #40]	; (8002590 <HAL_GPIO_EXTI_Callback+0x270>)
@@ -4913,16 +4918,16 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
  80025e8:	4b13      	ldr	r3, [pc, #76]	; (8002638 <HAL_GPIO_EXTI_Callback+0x318>)
  80025ea:	2200      	movs	r2, #0
  80025ec:	701a      	strb	r2, [r3, #0]
-		Reverse = true;
+			Reverse = true;
  80025ee:	4b13      	ldr	r3, [pc, #76]	; (800263c <HAL_GPIO_EXTI_Callback+0x31c>)
  80025f0:	2201      	movs	r2, #1
  80025f2:	701a      	strb	r2, [r3, #0]
-		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, RESET);	//Убираем флаг "mcuOPEN"
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, RESET);	//Убираем флаг "mcuOPEN"
  80025f4:	2200      	movs	r2, #0
  80025f6:	f44f 7180 	mov.w	r1, #256	; 0x100
  80025fa:	4811      	ldr	r0, [pc, #68]	; (8002640 <HAL_GPIO_EXTI_Callback+0x320>)
  80025fc:	f006 fc33 	bl	8008e66 <HAL_GPIO_WritePin>
-		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, SET);		//Выставляем флаг "mcuCLOSE"
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, SET);		//Выставляем флаг "mcuCLOSE"
  8002600:	2201      	movs	r2, #1
  8002602:	2180      	movs	r1, #128	; 0x80
  8002604:	480e      	ldr	r0, [pc, #56]	; (8002640 <HAL_GPIO_EXTI_Callback+0x320>)
@@ -18485,10 +18490,10 @@ void DutyCycleProcess(void)
  8007ad0:	4b21      	ldr	r3, [pc, #132]	; (8007b58 <DutyCycleProcess+0xc4>)
  8007ad2:	681b      	ldr	r3, [r3, #0]
  8007ad4:	635a      	str	r2, [r3, #52]	; 0x34
-		Compare = Compare - 10;
+		Compare = Compare - 5;
  8007ad6:	4b1a      	ldr	r3, [pc, #104]	; (8007b40 <DutyCycleProcess+0xac>)
  8007ad8:	881b      	ldrh	r3, [r3, #0]
- 8007ada:	3b0a      	subs	r3, #10
+ 8007ada:	3b05      	subs	r3, #5
  8007adc:	b29a      	uxth	r2, r3
  8007ade:	4b18      	ldr	r3, [pc, #96]	; (8007b40 <DutyCycleProcess+0xac>)
  8007ae0:	801a      	strh	r2, [r3, #0]
@@ -18497,7 +18502,7 @@ void DutyCycleProcess(void)
  8007ae4:	f000 f928 	bl	8007d38 <HAL_Delay>
 		__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, Compare);
 		__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_4, Compare);
-		Compare = Compare - 10;
+		Compare = Compare - 5;
 		HAL_Delay(5);	//Вопрос нужна ли задержка, и какая узнать подробней !!!
 	}
 }
@@ -18536,10 +18541,10 @@ void DutyCycleProcess(void)
  8007b22:	4b0d      	ldr	r3, [pc, #52]	; (8007b58 <DutyCycleProcess+0xc4>)
  8007b24:	681b      	ldr	r3, [r3, #0]
  8007b26:	641a      	str	r2, [r3, #64]	; 0x40
-		Compare = Compare - 10;
+		Compare = Compare - 5;
  8007b28:	4b05      	ldr	r3, [pc, #20]	; (8007b40 <DutyCycleProcess+0xac>)
  8007b2a:	881b      	ldrh	r3, [r3, #0]
- 8007b2c:	3b0a      	subs	r3, #10
+ 8007b2c:	3b05      	subs	r3, #5
  8007b2e:	b29a      	uxth	r2, r3
  8007b30:	4b03      	ldr	r3, [pc, #12]	; (8007b40 <DutyCycleProcess+0xac>)
  8007b32:	801a      	strh	r2, [r3, #0]

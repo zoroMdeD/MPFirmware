@@ -51,7 +51,7 @@
 /* USER CODE BEGIN PV */
 //Скважность равна нулю при значении 9000, для увеличения скважности уменьшаем значение
 uint16_t Compare = 0;
-uint16_t DutyCicle = 4500;	//Уставка до какой скважности увеличивать
+uint16_t DutyCicle = 7000;	//Уставка до какой скважности увеличивать
 
 //Флаги срабатывания управляющих сигналов
 //---------------------------------------
@@ -352,10 +352,15 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 //		CloseBlink = false;
 //		OpenBlink = true;
 
-		Forward = true;
+//		if((GPIOA->IDR & OPENmcu_Pin) != 0)
+//		{
+			Forward = true;
 
-		HAL_GPIO_WritePin(GPIOC, mcuCLOSE_Pin, RESET);	//Убираем флаг "mcuCLOSE"
-		HAL_GPIO_WritePin(GPIOC, mcuOPEN_Pin, SET);		//Выставляем флаг "mcuOPEN"
+			HAL_GPIO_WritePin(GPIOC, mcuCLOSE_Pin, RESET);	//Убираем флаг "mcuCLOSE"
+			HAL_GPIO_WritePin(GPIOC, mcuOPEN_Pin, SET);		//Выставляем флаг "mcuOPEN"
+//		}
+//		else
+//			handOPEN_flag = true;
 	}
 	//Пришла команда "Закрыть" с местного пульта управления (handCLOSE)
 	else if ((GPIO_Pin == GPIO_PIN_2) && handCLOSE_flag)
@@ -368,10 +373,15 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 //		OpenBlink = false;
 //		CloseBlink = true;
 
-		Reverse = true;
+//		if((GPIOA->IDR & CLOSEmcu_Pin) != 0)
+//		{
+			Reverse = true;
 
-		HAL_GPIO_WritePin(GPIOC, mcuOPEN_Pin, RESET);	//Убираем флаг "mcuOPEN"
-		HAL_GPIO_WritePin(GPIOC, mcuCLOSE_Pin, SET);	//Выставляем флаг "mcuCLOSE"
+			HAL_GPIO_WritePin(GPIOC, mcuOPEN_Pin, RESET);	//Убираем флаг "mcuOPEN"
+			HAL_GPIO_WritePin(GPIOC, mcuCLOSE_Pin, SET);	//Выставляем флаг "mcuCLOSE"
+//		}
+//		else
+//			handCLOSE_flag = true;
 	}
 
 
@@ -459,10 +469,16 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			SendStr("[110] - distOPEN\n");
 		#endif
 		distOPEN_flag = false;
-		Forward = true;
 
-		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, RESET);	//Убираем флаг "mcuCLOSE"
-		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, SET);		//Выставляем флаг "mcuOPEN"
+//		if((GPIOA->IDR & OPENmcu_Pin) != 0)
+//		{
+			Forward = true;
+
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, RESET);	//Убираем флаг "mcuCLOSE"
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, SET);		//Выставляем флаг "mcuOPEN"
+//		}
+//		else
+//			distOPEN_flag = true;
 	}
 	//Флаг того что привод дошел до конца "CLOSEmcu"
 	else if (GPIO_Pin == GPIO_PIN_11)
@@ -489,11 +505,17 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			SendStr("[113] - distCLOSE\n");
 		#endif
 		distCLOSE_flag = false;
-		Reverse = true;
 
-		//Здесь наверное нужно моргать
-		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, RESET);	//Убираем флаг "mcuOPEN"
-		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, SET);		//Выставляем флаг "mcuCLOSE"
+//		if((GPIOA->IDR & CLOSEmcu_Pin) != 0)
+//		{
+			Reverse = true;
+
+			//Здесь наверное нужно моргать
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, RESET);	//Убираем флаг "mcuOPEN"
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, SET);		//Выставляем флаг "mcuCLOSE"
+//		}
+//		else
+//			distCLOSE_flag = true;
 	}
 	//Пришла команда "Остановить" с дистанционного пульта управления (distSTOP)
 	else if ((GPIO_Pin == GPIO_PIN_14) && distSTOP_flag)

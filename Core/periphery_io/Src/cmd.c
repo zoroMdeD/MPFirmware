@@ -289,7 +289,7 @@ void DutyCycleProcess(void)
 		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, Compare);
 		__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, Compare);
 		__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_1, Compare);
-		Compare = Compare - 10;
+		Compare = Compare - 5;
 		HAL_Delay(5);	//Вопрос нужна ли задержка, и какая узнать подробней !!!
 	}
 	else if((Compare > DutyCicle) && DirMove_CLOSEmcu && ((GPIOA->IDR & CLOSEmcu_Pin) != 0))
@@ -302,7 +302,7 @@ void DutyCycleProcess(void)
 		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, Compare);
 		__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, Compare);
 		__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_4, Compare);
-		Compare = Compare - 10;
+		Compare = Compare - 5;
 		HAL_Delay(5);	//Вопрос нужна ли задержка, и какая узнать подробней !!!
 	}
 }
