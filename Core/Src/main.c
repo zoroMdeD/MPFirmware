@@ -70,7 +70,7 @@ bool handCTRL_flag = false;
 
 //Флаги правильности подключения фаз
 uint8_t A = 0;
-uint8_t B = 0;
+uint8_t B = 3;
 uint8_t C = 0;
 bool PhCorrect = false;
 bool PhUncorrect = false;
@@ -426,58 +426,58 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	//Переход через ноль на фазе "А"
 	else if (GPIO_Pin == GPIO_PIN_3)
 	{
-		if(((GPIOB->IDR & GPIO_PIN_5) == 0) && ((GPIOB->IDR & GPIO_PIN_7) == 0))
+		if(/*((GPIOB->IDR & GPIO_PIN_5) == 0) && */((GPIOB->IDR & GPIO_PIN_7) == 0) && A == 0)
 		{
 			SendStr("[301] - A\n");
 			A = 1;
 			cnt = 0;
 		}
-		if(DirMove_OPENmcu && ((GPIOA->IDR & OPENmcu_Pin) != 0))
-		{
-			#if DEBUG_USART
-				SendStr("[104] - AFWD\n");
-			#endif
-			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);	//Stop timer two channel one	(AFWD)
-			HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);	//Run timer two channel one		(AFWD)
-		}
-		else if(DirMove_CLOSEmcu && ((GPIOA->IDR & CLOSEmcu_Pin) != 0))
-		{
-			#if DEBUG_USART
-				SendStr("[105] - AREV\n");
-			#endif
-			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_4);	//Stop timer two channel four	(AREV)
-			HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);	//Run timer two channel four	(AREV)
-		}
+//		if(DirMove_OPENmcu && ((GPIOA->IDR & OPENmcu_Pin) != 0))
+//		{
+//			#if DEBUG_USART
+//				SendStr("[104] - AFWD\n");
+//			#endif
+//			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);	//Stop timer two channel one	(AFWD)
+//			HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);	//Run timer two channel one		(AFWD)
+//		}
+//		else if(DirMove_CLOSEmcu && ((GPIOA->IDR & CLOSEmcu_Pin) != 0))
+//		{
+//			#if DEBUG_USART
+//				SendStr("[105] - AREV\n");
+//			#endif
+//			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_4);	//Stop timer two channel four	(AREV)
+//			HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);	//Run timer two channel four	(AREV)
+//		}
 	}
 	 //Переход через ноль на фазе "B"
 	else if (GPIO_Pin == GPIO_PIN_5)
 	{
-		if(cnt == 2)
+		if((cnt == 2) &&  B == 0)
 		{
 			B = 3;
 			SendStr("[303] - B\n");
 		}
-		if(DirMove_OPENmcu && ((GPIOA->IDR & OPENmcu_Pin) != 0))
-		{
-			#if DEBUG_USART
-				SendStr("[106] - BFWD\n");
-			#endif
-			HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);	//Stop timer three channel one	(BFWD)
-			HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);	//Run timer three channel one	(BFWD)
-		}
-		else if(DirMove_CLOSEmcu && ((GPIOA->IDR & CLOSEmcu_Pin) != 0))
-		{
-			#if DEBUG_USART
-				SendStr("[107] - BFWD\n");
-			#endif
-			HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);	//Stop timer three channel one	(BFWD)
-			HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);	//Run timer three channel one	(BFWD)
-		}
+//		if(DirMove_OPENmcu && ((GPIOA->IDR & OPENmcu_Pin) != 0))
+//		{
+//			#if DEBUG_USART
+//				SendStr("[106] - BFWD\n");
+//			#endif
+//			HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);	//Stop timer three channel one	(BFWD)
+//			HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);	//Run timer three channel one	(BFWD)
+//		}
+//		else if(DirMove_CLOSEmcu && ((GPIOA->IDR & CLOSEmcu_Pin) != 0))
+//		{
+//			#if DEBUG_USART
+//				SendStr("[107] - BFWD\n");
+//			#endif
+//			HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);	//Stop timer three channel one	(BFWD)
+//			HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);	//Run timer three channel one	(BFWD)
+//		}
 	}
 	//Переход через ноль на фазе "C"
 	else if (GPIO_Pin == GPIO_PIN_7)
 	{
-		if(cnt == 1)
+		if((cnt == 1) && C == 0)
 		{
 			C = 2;
 			SendStr("[302] - C\n");
@@ -612,7 +612,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
         {
         	if(A < C && B > C)
         	{
-        		HAL_GPIO_WritePin(GPIOA, mcuFAIL_Pin, RESET);	//Чередования фаз не прямое
+        		HAL_GPIO_WritePin(GPIOA, mcuFAIL_Pin, RESET);	//Чередования фаз прямое
         		HAL_GPIO_WritePin(GPIOC, mcuREADY_Pin, SET);	//Статус, МК работает нормально
         		PhCorrect = true;
         		PhUncorrect = false;
