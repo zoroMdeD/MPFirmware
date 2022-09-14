@@ -27,6 +27,7 @@
 #include "usart.h"
 #include "wwdg.h"
 #include "gpio.h"
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -75,6 +76,8 @@ bool PhCorrect = false;
 bool PhUncorrect = false;
 uint8_t BlinkFail = 0;
 uint16_t BlinkQueue = 0;
+
+bool InitFlag = true;
 
 //bool CloseBlink = false;			//Флаг блинкера на закрытие
 //bool OpenBlink = false;			//Флаг блинкера на открытие
@@ -133,7 +136,22 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+//void ReInitZeroDetectorPins(void)
+//{
+////	GPIO_InitTypeDef GPIO_InitStruct;
+////
+////	/*Configure GPIO pins : PBPin PBPin */
+////	GPIO_InitStruct.Pin = A_ZeroCross_Pin|B_ZeroCross_Pin|C_ZeroCross_Pin;
+////	GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+////	GPIO_InitStruct.Pull = GPIO_NOPULL;
+////	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+//}
+//void InitTimersZeroDetector(void)
+//{
+//	MX_TIM2_Init();
+//	MX_TIM3_Init();
+//	MX_TIM4_Init();
+//}
 /* USER CODE END 0 */
 
 /**
@@ -167,9 +185,6 @@ int main(void)
   MX_DMA_Init();
   MX_ADC1_Init();
   MX_TIM1_Init();
-  MX_TIM2_Init();
-  MX_TIM3_Init();
-  MX_TIM4_Init();
   MX_I2C2_Init();
   MX_SPI1_Init();
   MX_USART1_UART_Init();
@@ -177,6 +192,7 @@ int main(void)
 //  MX_RTC_Init();
 //  MX_WWDG_Init();
   /* USER CODE BEGIN 2 */
+
 	time = 200;
 
 	EN_Interrupt();	//Для дебага/Конфигурации по USART1
@@ -191,12 +207,12 @@ int main(void)
 	HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_1);
 	//------------------------------------------
 	//---------------FATfs----------------------
-	MyInitCard();
-	SendStr("Init sd card -> success\n");
+//	MyInitCard();
+//	SendStr("Init sd card -> success\n");
 	//------------------------------------------
 
-	HAL_GPIO_WritePin(GPIOC, mcuREADY_Pin, SET);	//Статус, МК работает нормально
-	HAL_GPIO_WritePin(GPIOA, mcuFAIL_Pin, RESET);	//Сбрасываем ошибку МК
+//	HAL_GPIO_WritePin(GPIOC, mcuREADY_Pin, SET);	//Статус, МК работает нормально
+//	HAL_GPIO_WritePin(GPIOA, mcuFAIL_Pin, RESET);	//Сбрасываем ошибку МК
 
 	//Считываем значение с пина управления
 	handCTRL_flag = GPIOC->IDR & handCTRL_Pin;
@@ -234,6 +250,11 @@ int main(void)
 		else if(!SELF_CAPTURE_flag)
 			SendStr("[4] - Self capture is reset\n");
 	#endif
+
+
+	#if REINIT
+		MX_GPIO_Init_Interrupt();
+	#endif
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -242,15 +263,29 @@ int main(void)
   {
 	  DisplayInfo();		  //Придумать как заблокировать режим работы с дисплеем
 
-//	  if(PhCorrect)	//Проверяем правильность включение фаз
-//	  {
+	  if(PhCorrect)	//Проверяем правильность включение фаз
+	  {
+		  if(InitFlag)
+		  {
+			  InitFlag = false;
+			  #undef REINIT
+			  #define REINIT	0
+
+			  MX_TIM2_Init();
+			  MX_TIM3_Init();
+			  MX_TIM4_Init();
+		  }
 		  ManagementProcess();
 		  SelfCaptureProcess();
 		  DutyCycleProcess();
 
 		  DirectionMove();
-//	  		СurrentСomparison();
-//	  }
+//		  СurrentСomparison();
+
+//		  adcValue[0] += ConversionADC((uint16_t)adc[0]);
+//		  adcValue[1] += ConversionADC((uint16_t)adc[1]);
+//		  adcValue[2] += ConversionADC((uint16_t)adc[2]);
+	  }
 	  DebugMain();
 
 	  //-------------------------------------------------------------------------------------------------
@@ -391,9 +426,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	//Переход через ноль на фазе "А"
 	else if (GPIO_Pin == GPIO_PIN_3)
 	{
-		if(!B && !C)
+		if(((GPIOB->IDR & GPIO_PIN_5) == 0) && ((GPIOB->IDR & GPIO_PIN_7) == 0))
+		{
+			SendStr("[301] - A\n");
 			A = 1;
-
+			cnt = 0;
+		}
 		if(DirMove_OPENmcu && ((GPIOA->IDR & OPENmcu_Pin) != 0))
 		{
 			#if DEBUG_USART
@@ -414,9 +452,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	 //Переход через ноль на фазе "B"
 	else if (GPIO_Pin == GPIO_PIN_5)
 	{
-		if(A && C)
+		if(cnt == 2)
+		{
 			B = 3;
-
+			SendStr("[303] - B\n");
+		}
 		if(DirMove_OPENmcu && ((GPIOA->IDR & OPENmcu_Pin) != 0))
 		{
 			#if DEBUG_USART
@@ -437,9 +477,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	//Переход через ноль на фазе "C"
 	else if (GPIO_Pin == GPIO_PIN_7)
 	{
-		if(A && !B)
+		if(cnt == 1)
+		{
 			C = 2;
-
+			SendStr("[302] - C\n");
+		}
 		if(DirMove_OPENmcu && ((GPIOA->IDR & OPENmcu_Pin) != 0))
 		{
 			#if DEBUG_USART
@@ -545,11 +587,14 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
     {
     	What_Time++;
     	BlinkFail++;
-    	BlinkQueue++;
+
+    	if(InitFlag)
+    		BlinkQueue++;
+
     	cnt++;
-    	adcValue[0] += ConversionADC((uint16_t)adc[0]);
-        adcValue[1] += ConversionADC((uint16_t)adc[1]);
-        adcValue[2] += ConversionADC((uint16_t)adc[2]);
+//    	adcValue[0] += ConversionADC((uint16_t)adc[0]);
+//        adcValue[1] += ConversionADC((uint16_t)adc[1]);
+//        adcValue[2] += ConversionADC((uint16_t)adc[2]);
 
 //        if(Blink == 50)	//Раз в 0.5 секунд мигаем
 //        {
@@ -558,28 +603,28 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 //        	else if(CloseBlink)
 //        	    HAL_GPIO_TogglePin(GPIOC, mcuCLOSE_Pin);	//Статус, задвижка закрывается(мигание)
 //        }
-//        if(BlinkFail == 100 && PhUncorrect)	//Раз в 1 секунду индикация ошибки(Чередование фаз не прямое)
-//        {
-//        	HAL_GPIO_TogglePin(GPIOA, mcuFAIL_Pin);	//Чередования фаз не прямое
-//        	BlinkFail = 0;
-//        }
-//        if(BlinkQueue == 500)	//Раз в 5 секунд проверяет правильность расключения фаз
-//        {
-//        	if(A < C && B > C)
-//        	{
-//        		HAL_GPIO_WritePin(GPIOA, mcuFAIL_Pin, RESET);	//Чередования фаз не прямое
-//        		HAL_GPIO_WritePin(GPIOC, mcuREADY_Pin, SET);	//Статус, МК работает нормально
-//        		PhCorrect = true;
-//        		PhUncorrect = false;
-//        	}
-//        	else
-//        	{
-//        		HAL_GPIO_WritePin(GPIOC, mcuREADY_Pin, RESET);	//Статус выключаем, МК работает с ошибкой
-//        		PhCorrect = false;
-//        		PhUncorrect = true;
-//        	}
-//        	BlinkQueue = 0;
-//        }
+        if(BlinkFail == 250 && PhUncorrect)	//Раз в 0.75 секунды индикация ошибки(Чередование фаз не прямое)
+        {
+        	HAL_GPIO_TogglePin(GPIOA, mcuFAIL_Pin);	//Чередования фаз не прямое
+        	BlinkFail = 0;
+        }
+        if(BlinkQueue == 1000)	//Раз в 3 секунды проверяет правильность расключения фаз
+        {
+        	if(A < C && B > C)
+        	{
+        		HAL_GPIO_WritePin(GPIOA, mcuFAIL_Pin, RESET);	//Чередования фаз не прямое
+        		HAL_GPIO_WritePin(GPIOC, mcuREADY_Pin, SET);	//Статус, МК работает нормально
+        		PhCorrect = true;
+        		PhUncorrect = false;
+        	}
+        	else
+        	{
+        		HAL_GPIO_WritePin(GPIOC, mcuREADY_Pin, RESET);	//Статус выключаем, МК работает с ошибкой
+        		PhCorrect = false;
+        		PhUncorrect = true;
+        	}
+        	BlinkQueue = 0;
+        }
         if(What_Time == 12000)	//Через 2 минуты отключаем дисплей
         {
 			#if DEBUG_USART

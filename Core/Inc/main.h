@@ -79,6 +79,7 @@ extern "C" {
 	 * Trigger Source = Zero crossing phase C 								-	(C_ZeroCross)	-	PB7
 	 */
 
+#define REINIT	1
 //Settings firmware
 extern struct ConfigurationSystem
 {
@@ -193,17 +194,47 @@ void Error_Handler(void);
 #define WIRE_TxD_GPIO_Port GPIOC
 #define WIRE_RxD_Pin GPIO_PIN_11
 #define WIRE_RxD_GPIO_Port GPIOC
+
+#if REINIT
+	#define A_ZeroCross_Pin GPIO_PIN_3
+	#define A_ZeroCross_GPIO_Port GPIOB
+	#define A_ZeroCross_EXTI_IRQn EXTI3_IRQn
+#else
+	#define A_ZeroCross_Pin GPIO_PIN_3
+	#define A_ZeroCross_GPIO_Port GPIOB
+#endif
+
 #define BFWD_Pin GPIO_PIN_4
 #define BFWD_GPIO_Port GPIOB
+
+#if REINIT
+	#define B_ZeroCross_Pin GPIO_PIN_5
+	#define B_ZeroCross_GPIO_Port GPIOB
+	#define B_ZeroCross_EXTI_IRQn EXTI9_5_IRQn
+#else
+	#define B_ZeroCross_Pin GPIO_PIN_5
+	#define B_ZeroCross_GPIO_Port GPIOB
+#endif
+
 #define CFWD_Pin GPIO_PIN_6
 #define CFWD_GPIO_Port GPIOB
+
+#if REINIT
+	#define C_ZeroCross_Pin GPIO_PIN_7
+	#define C_ZeroCross_GPIO_Port GPIOB
+	#define C_ZeroCross_EXTI_IRQn EXTI9_5_IRQn
+#else
+	#define C_ZeroCross_Pin GPIO_PIN_7
+	#define C_ZeroCross_GPIO_Port GPIOB
+#endif
+
 #define distOPEN_Pin GPIO_PIN_8
 #define distOPEN_GPIO_Port GPIOB
 #define distOPEN_EXTI_IRQn EXTI9_5_IRQn
 #define CREV_Pin GPIO_PIN_9
 #define CREV_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
-#define DEBUG_USART		0				//Отладка через USART 1 - Вкл; 0 - Выкл
+#define DEBUG_USART		1				//Отладка через USART 1 - Вкл; 0 - Выкл
 //------------------------UPD_Firmware------------------------
 #define FW_CRC32_OK		"OK"			//Контрольная сумма совпала, пакет данных цел
 #define FW_CRC32_ERR	"ERROR"			//Ошибка передачи пакета данных(необходимо повторить посылку пакета)

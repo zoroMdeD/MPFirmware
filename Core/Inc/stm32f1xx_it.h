@@ -63,7 +63,7 @@ void EXTI9_5_IRQHandler(void);
 void USART1_IRQHandler(void);
 void EXTI15_10_IRQHandler(void);
 /* USER CODE BEGIN EFP */
-
+void EXTI3_IRQHandler(void);
 /* USER CODE END EFP */
 
 #ifdef __cplusplus

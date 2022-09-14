@@ -54,5 +54,6 @@ void СurrentСomparison(void)
     }
 
     if(run_Сomparison)
-    	(Amps[0] > reserve_Current || Amps[1] > reserve_Current || Amps[2] > reserve_Current) ? (Stop = true) : (Stop = false);
+//    	(Amps[0] > reserve_Current || Amps[1] > reserve_Current || Amps[2] > reserve_Current) ? (Stop = true) : (Stop = false);
+    	(Amps[1] > reserve_Current) ? (Stop = true) : (Stop = false);
 }

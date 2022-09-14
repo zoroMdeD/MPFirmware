@@ -264,7 +264,8 @@ void DMA1_Channel1_IRQHandler(void)
 void EXTI9_5_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI9_5_IRQn 0 */
-
+  HAL_GPIO_EXTI_IRQHandler(B_ZeroCross_Pin);
+  HAL_GPIO_EXTI_IRQHandler(C_ZeroCross_Pin);
   /* USER CODE END EXTI9_5_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(distOPEN_Pin);
   /* USER CODE BEGIN EXTI9_5_IRQn 1 */
@@ -317,5 +318,17 @@ void EXTI15_10_IRQHandler(void)
 }
 
 /* USER CODE BEGIN 1 */
+/**
+  * @brief This function handles EXTI line3 interrupt.
+  */
+void EXTI3_IRQHandler(void)
+{
+  /* USER CODE BEGIN EXTI3_IRQn 0 */
 
+  /* USER CODE END EXTI3_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(A_ZeroCross_Pin);
+  /* USER CODE BEGIN EXTI3_IRQn 1 */
+
+  /* USER CODE END EXTI3_IRQn 1 */
+}
 /* USER CODE END 1 */
