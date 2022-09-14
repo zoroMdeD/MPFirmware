@@ -17,6 +17,7 @@ extern bool handCLOSE_flag;
 extern bool distOPEN_flag;
 extern bool distCLOSE_flag;
 extern bool distSTOP_flag;
+extern bool distHIGHP_flag;
 
 extern bool SELF_CAPTURE_flag;
 extern bool handCTRL_flag;
@@ -68,6 +69,7 @@ void DirectionMove(void)
 				SendStr("[13] - distCLOSE_flag: Control is remote\n");
 			#endif
 			distCLOSE_flag = true;
+			distHIGHP_flag = true;
 		}
 
 		DirMove_OPENmcu = true;
@@ -79,7 +81,7 @@ void DirectionMove(void)
 		 * Возможно нужно поставить задержку для исключения одновременной работы таймеров
 		 * на открытие и закрытие
 		 */
-		HAL_Delay(20);
+		HAL_Delay(1000);
 
 		//Запускаем таймеры на открытие
 		if((GPIOA->IDR & OPENmcu_Pin) != 0)
@@ -119,13 +121,14 @@ void DirectionMove(void)
 				SendStr("[17] - distOPEN_flag: Control is remote\n");
 			#endif
 			distOPEN_flag = true;
+			distHIGHP_flag = true;
 		}
 
 		DirMove_CLOSEmcu = true;
 
 		Compare = 9000;
 
-		HAL_Delay(20);
+		HAL_Delay(1000);
 
 		//Запускаем таймеры на закрытие
 		if((GPIOA->IDR & CLOSEmcu_Pin) != 0)
@@ -176,6 +179,8 @@ void DirectionMove(void)
 			#endif
 			distOPEN_flag = true;
 			distCLOSE_flag = true;
+			distSTOP_flag = true;
+			distHIGHP_flag = true;
 		}
 
 //		OpenBlink = false;
@@ -289,8 +294,8 @@ void DutyCycleProcess(void)
 		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, Compare);
 		__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, Compare);
 		__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_1, Compare);
-		Compare = Compare - 5;
-		HAL_Delay(5);	//Вопрос нужна ли задержка, и какая узнать подробней !!!
+		Compare = Compare - 10;
+		HAL_Delay(10);	//Вопрос нужна ли задержка, и какая узнать подробней !!!
 	}
 	else if((Compare > DutyCicle) && DirMove_CLOSEmcu && ((GPIOA->IDR & CLOSEmcu_Pin) != 0))
 	{
@@ -302,7 +307,7 @@ void DutyCycleProcess(void)
 		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, Compare);
 		__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, Compare);
 		__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_4, Compare);
-		Compare = Compare - 5;
-		HAL_Delay(5);	//Вопрос нужна ли задержка, и какая узнать подробней !!!
+		Compare = Compare - 10;
+		HAL_Delay(10);	//Вопрос нужна ли задержка, и какая узнать подробней !!!
 	}
 }

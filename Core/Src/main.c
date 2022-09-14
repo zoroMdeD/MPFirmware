@@ -328,18 +328,21 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		 *     	 Low			  Remote
 		 */
 		//Проверяем статус, с какого пульта идет управление (handCTRL)
-		if((GPIOC->IDR & GPIO_PIN_3) == 0)
-		{
-			if(((GPIOB->IDR & GPIO_PIN_15) != 0) && ((GPIOB->IDR & GPIO_PIN_14) == 0))	//HIGHP_OPENmcu = 1; HIGHP_CLOSEmcu = 0;
+//		if(!handCTRL_flag)
+//		{
+		SendStr("[101] - distHIGHP is action\n");
+			if(((GPIOB->IDR & HIGHP_OPENmcu_Pin) > 0) && ((GPIOB->IDR & HIGHP_CLOSEmcu_Pin) < 1))	//HIGHP_OPENmcu = 1; HIGHP_CLOSEmcu = 0;
 			{
+				SendStr("[101] - Forward\n");
 				Forward = true;
 			}
-			else if(((GPIOB->IDR & GPIO_PIN_15) == 0) && ((GPIOB->IDR & GPIO_PIN_14) != 0))	//HIGHP_OPENmcu = 0; HIGHP_CLOSEmcu = 1;
+			else if(((GPIOB->IDR & HIGHP_OPENmcu_Pin) < 1) && ((GPIOB->IDR & HIGHP_CLOSEmcu_Pin) > 0))	//HIGHP_OPENmcu = 0; HIGHP_CLOSEmcu = 1;
 			{
+				SendStr("[101] - Revers\n");
 				Reverse = true;
 			}
-		}
-		HighPriority = true;
+//		}
+//		HighPriority = true;
 	}
 	//Пришла команда "Открыть" с местного пульта управления (handOPEN)
 	else if ((GPIO_Pin == GPIO_PIN_1) && handOPEN_flag)
