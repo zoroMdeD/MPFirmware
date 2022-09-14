@@ -79,7 +79,7 @@ void DirectionMove(void)
 		 * Возможно нужно поставить задержку для исключения одновременной работы таймеров
 		 * на открытие и закрытие
 		 */
-		HAL_Delay(20);
+		HAL_Delay(1000);
 
 		//Запускаем таймеры на открытие
 		if((GPIOA->IDR & OPENmcu_Pin) != 0)
@@ -125,7 +125,7 @@ void DirectionMove(void)
 
 		Compare = 9000;
 
-		HAL_Delay(20);
+		HAL_Delay(1000);
 
 		//Запускаем таймеры на закрытие
 		if((GPIOA->IDR & CLOSEmcu_Pin) != 0)

@@ -79,6 +79,8 @@ uint16_t BlinkQueue = 0;
 
 bool InitFlag = true;
 
+bool test_flag = true;
+
 //bool CloseBlink = false;			//Флаг блинкера на закрытие
 //bool OpenBlink = false;			//Флаг блинкера на открытие
 //---------------------------------------
@@ -111,7 +113,7 @@ double Amps[3] = {0,};				//Значение тока на фазах (сред�
 volatile uint32_t adc[3] = {0,}; 	//Массив для хранения данных АЦП
 double adcValue[3] = {0,};			//Массив для хранения обработанных данных АЦП
 double reserve_Current = 0.0;		//Переменная значения тока с запасом(уставка по току)
-uint8_t cnt = 0;					//Счетчик кол-ва измеренных значений тока
+uint16_t cnt = 0;					//Счетчик кол-ва измеренных значений тока
 bool run_Сomparison = false;
 //-------------------------------------------
 //----------------FATfs----------------------
@@ -267,13 +269,23 @@ int main(void)
 	  {
 		  if(InitFlag)
 		  {
+			  #if DEBUG_USART
+			  	  SendStr("InitFlag - off\n");
+			  #endif
+
 			  InitFlag = false;
 			  #undef REINIT
 			  #define REINIT	0
 
+			  MX_GPIO_Init();
 			  MX_TIM2_Init();
 			  MX_TIM3_Init();
 			  MX_TIM4_Init();
+
+			  #if DEBUG_USART
+			  	  SendStr("Timers init\n");
+			  #endif
+			  	HAL_GPIO_WritePin(GPIOC, mcuREADY_Pin, SET);	//Статус, МК работает нормально
 		  }
 		  ManagementProcess();
 		  SelfCaptureProcess();
@@ -432,22 +444,22 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			A = 1;
 			cnt = 0;
 		}
-//		if(DirMove_OPENmcu && ((GPIOA->IDR & OPENmcu_Pin) != 0))
-//		{
-//			#if DEBUG_USART
-//				SendStr("[104] - AFWD\n");
-//			#endif
-//			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);	//Stop timer two channel one	(AFWD)
-//			HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);	//Run timer two channel one		(AFWD)
-//		}
-//		else if(DirMove_CLOSEmcu && ((GPIOA->IDR & CLOSEmcu_Pin) != 0))
-//		{
-//			#if DEBUG_USART
-//				SendStr("[105] - AREV\n");
-//			#endif
-//			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_4);	//Stop timer two channel four	(AREV)
-//			HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);	//Run timer two channel four	(AREV)
-//		}
+		if(DirMove_OPENmcu && ((GPIOA->IDR & OPENmcu_Pin) != 0))
+		{
+			#if DEBUG_USART
+				SendStr("[104] - AFWD\n");
+			#endif
+			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);	//Stop timer two channel one	(AFWD)
+			HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);	//Run timer two channel one		(AFWD)
+		}
+		else if(DirMove_CLOSEmcu && ((GPIOA->IDR & CLOSEmcu_Pin) != 0))
+		{
+			#if DEBUG_USART
+				SendStr("[105] - AREV\n");
+			#endif
+			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_4);	//Stop timer two channel four	(AREV)
+			HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);	//Run timer two channel four	(AREV)
+		}
 	}
 	 //Переход через ноль на фазе "B"
 	else if (GPIO_Pin == GPIO_PIN_5)
@@ -457,22 +469,22 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			B = 3;
 			SendStr("[303] - B\n");
 		}
-//		if(DirMove_OPENmcu && ((GPIOA->IDR & OPENmcu_Pin) != 0))
-//		{
-//			#if DEBUG_USART
-//				SendStr("[106] - BFWD\n");
-//			#endif
-//			HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);	//Stop timer three channel one	(BFWD)
-//			HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);	//Run timer three channel one	(BFWD)
-//		}
-//		else if(DirMove_CLOSEmcu && ((GPIOA->IDR & CLOSEmcu_Pin) != 0))
-//		{
-//			#if DEBUG_USART
-//				SendStr("[107] - BFWD\n");
-//			#endif
-//			HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);	//Stop timer three channel one	(BFWD)
-//			HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);	//Run timer three channel one	(BFWD)
-//		}
+		if(DirMove_OPENmcu && ((GPIOA->IDR & OPENmcu_Pin) != 0))
+		{
+			#if DEBUG_USART
+				SendStr("[106] - BFWD\n");
+			#endif
+			HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);	//Stop timer three channel one	(BFWD)
+			HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);	//Run timer three channel one	(BFWD)
+		}
+		else if(DirMove_CLOSEmcu && ((GPIOA->IDR & CLOSEmcu_Pin) != 0))
+		{
+			#if DEBUG_USART
+				SendStr("[107] - BFWD\n");
+			#endif
+			HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);	//Stop timer three channel one	(BFWD)
+			HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);	//Run timer three channel one	(BFWD)
+		}
 	}
 	//Переход через ноль на фазе "C"
 	else if (GPIO_Pin == GPIO_PIN_7)
@@ -591,7 +603,8 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
     	if(InitFlag)
     		BlinkQueue++;
 
-    	cnt++;
+    	if(test_flag)
+    		cnt++;
 //    	adcValue[0] += ConversionADC((uint16_t)adc[0]);
 //        adcValue[1] += ConversionADC((uint16_t)adc[1]);
 //        adcValue[2] += ConversionADC((uint16_t)adc[2]);
@@ -610,16 +623,23 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
         }
         if(BlinkQueue == 1000)	//Раз в 3 секунды проверяет правильность расключения фаз
         {
+        	test_flag = false;
         	if(A < C && B > C)
         	{
-        		HAL_GPIO_WritePin(GPIOA, mcuFAIL_Pin, RESET);	//Чередования фаз прямое
-        		HAL_GPIO_WritePin(GPIOC, mcuREADY_Pin, SET);	//Статус, МК работает нормально
+				#if DEBUG_USART
+        			SendStr("PhOK\n");
+				#endif
+//        		HAL_GPIO_WritePin(GPIOA, mcuFAIL_Pin, RESET);	//Чередования фаз прямое
+//        		HAL_GPIO_WritePin(GPIOC, mcuREADY_Pin, SET);	//Статус, МК работает нормально
         		PhCorrect = true;
         		PhUncorrect = false;
         	}
         	else
         	{
-        		HAL_GPIO_WritePin(GPIOC, mcuREADY_Pin, RESET);	//Статус выключаем, МК работает с ошибкой
+				#if DEBUG_USART
+        			SendStr("PhNO\n");
+				#endif
+//        		HAL_GPIO_WritePin(GPIOC, mcuREADY_Pin, RESET);	//Статус выключаем, МК работает с ошибкой
         		PhCorrect = false;
         		PhUncorrect = true;
         	}
