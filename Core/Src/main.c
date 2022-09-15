@@ -65,21 +65,20 @@ bool OPENmcu_flag = false;
 bool distCLOSE_flag = false;
 bool distSTOP_flag = false;
 bool distINT_flag = false;
-
 bool handCTRL_flag = false;
 
 //Флаги правильности подключения фаз
 uint8_t A = 0;
 uint8_t B = 3;
 uint8_t C = 0;
-bool PhCorrect = false;
-bool PhUncorrect = false;
-uint8_t BlinkFail = 0;
-uint16_t BlinkQueue = 0;
+bool PhCorrect = false;	//Флаг корректности фаз
+bool PhUncorrect = false;	//Флаг того что фазы не правильно включены
+uint8_t BlinkFail = 0;	//Переменная отсчета времени для моргания индикацией ошибки
+uint16_t BlinkQueue = 0;	//Переменная отсчета для определения очередности фаз
 
-bool InitFlag = true;
-
-bool test_flag = true;
+bool InitFlag = true;	//Флаг инициализации переферии
+bool EnoughFlag = true;	//Флаг прерывания подсчета мс для определения очередности фаз
+uint8_t CNTQueue = 0;	//Переченная подсчета кол-ва пройденного времени, 1 = 3мс, ect
 
 //bool CloseBlink = false;			//Флаг блинкера на закрытие
 //bool OpenBlink = false;			//Флаг блинкера на открытие
@@ -106,9 +105,9 @@ uint8_t Blink = 0;					//Счетчик времени для индикации
 uint16_t What_Time = 0;				//Счетчик времени на выполнение необходимых действий
 bool display_Off = false;			//Флаг состояния дисплея
 bool display_Sleep = false;			//Флаг того что дисплей в спящем режиме
-double Current = 0.0;				//Переменная значения выставленного тока
 //-------------------------------------------
 //-----------------ADC-----------------------
+double Current = 0.0;				//Переменная значения выставленного тока
 double Amps[3] = {0,};				//Значение тока на фазах (среднее значение)
 volatile uint32_t adc[3] = {0,}; 	//Массив для хранения данных АЦП
 double adcValue[3] = {0,};			//Массив для хранения обработанных данных АЦП
@@ -138,22 +137,7 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-//void ReInitZeroDetectorPins(void)
-//{
-////	GPIO_InitTypeDef GPIO_InitStruct;
-////
-////	/*Configure GPIO pins : PBPin PBPin */
-////	GPIO_InitStruct.Pin = A_ZeroCross_Pin|B_ZeroCross_Pin|C_ZeroCross_Pin;
-////	GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-////	GPIO_InitStruct.Pull = GPIO_NOPULL;
-////	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-//}
-//void InitTimersZeroDetector(void)
-//{
-//	MX_TIM2_Init();
-//	MX_TIM3_Init();
-//	MX_TIM4_Init();
-//}
+
 /* USER CODE END 0 */
 
 /**
@@ -209,12 +193,11 @@ int main(void)
 	HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_1);
 	//------------------------------------------
 	//---------------FATfs----------------------
-//	MyInitCard();
-//	SendStr("Init sd card -> success\n");
+	MyInitCard();
+	#if DEBUG_USART
+		SendStr("Init sd card -> success\n");
+	#endif
 	//------------------------------------------
-
-//	HAL_GPIO_WritePin(GPIOC, mcuREADY_Pin, SET);	//Статус, МК работает нормально
-//	HAL_GPIO_WritePin(GPIOA, mcuFAIL_Pin, RESET);	//Сбрасываем ошибку МК
 
 	//Считываем значение с пина управления
 	handCTRL_flag = GPIOC->IDR & handCTRL_Pin;
@@ -252,7 +235,6 @@ int main(void)
 		else if(!SELF_CAPTURE_flag)
 			SendStr("[4] - Self capture is reset\n");
 	#endif
-
 
 	#if REINIT
 		MX_GPIO_Init_Interrupt();
@@ -362,6 +344,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	//Пришла команда "Высшего приоритета" с дистанционного пульта управления (distHIGHP)
 
 	//Уточнить работает ли высший приоритет когда работаем с местного пульта управления!!!
+	//Игнорируем высший приоритет при работе на местном пульте
 
 	if ((GPIO_Pin == GPIO_PIN_0) && distHIGHP_flag)
 	{
@@ -432,17 +415,19 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	}
 
 
-	//--------------------------------------РАБОТА ФАЗ--------------------------------------
+	//----------------------------------------------------------РАБОТА ФАЗ----------------------------------------------------------
 
 
 	//Переход через ноль на фазе "А"
 	else if (GPIO_Pin == GPIO_PIN_3)
 	{
-		if(/*((GPIOB->IDR & GPIO_PIN_5) == 0) && */((GPIOB->IDR & GPIO_PIN_7) == 0) && A == 0)
+		if(((GPIOB->IDR & B_ZeroCross_Pin) == 0) && ((GPIOB->IDR & C_ZeroCross_Pin) == 0) && A == 0)
 		{
-			SendStr("[301] - A\n");
+			#if DEBUG_USART
+				SendStr("[301] - A\n");
+			#endif
 			A = 1;
-			cnt = 0;
+			CNTQueue = 0;
 		}
 		if(DirMove_OPENmcu && ((GPIOA->IDR & OPENmcu_Pin) != 0))
 		{
@@ -464,10 +449,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	 //Переход через ноль на фазе "B"
 	else if (GPIO_Pin == GPIO_PIN_5)
 	{
-		if((cnt == 2) &&  B == 0)
+		if((CNTQueue == 2) &&  B == 0)
 		{
 			B = 3;
-			SendStr("[303] - B\n");
+			#if DEBUG_USART
+				SendStr("[303] - B\n");
+			#endif
 		}
 		if(DirMove_OPENmcu && ((GPIOA->IDR & OPENmcu_Pin) != 0))
 		{
@@ -489,10 +476,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	//Переход через ноль на фазе "C"
 	else if (GPIO_Pin == GPIO_PIN_7)
 	{
-		if((cnt == 1) && C == 0)
+		if((CNTQueue == 1) && C == 0)
 		{
 			C = 2;
-			SendStr("[302] - C\n");
+			#if DEBUG_USART
+				SendStr("[302] - C\n");
+			#endif
 		}
 		if(DirMove_OPENmcu && ((GPIOA->IDR & OPENmcu_Pin) != 0))
 		{
@@ -513,7 +502,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	}
 
 
-	//--------------------------------------------------------------------------------------
+	//------------------------------------------------------------------------------------------------------------------------------
 
 
 	//Пришла команда "Открыть" с дистанционного пульта управления (distOPEN)
@@ -524,15 +513,10 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		#endif
 		distOPEN_flag = false;
 
-//		if((GPIOA->IDR & OPENmcu_Pin) != 0)
-//		{
-			Forward = true;
+		Forward = true;
 
-			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, RESET);	//Убираем флаг "mcuCLOSE"
-			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, SET);		//Выставляем флаг "mcuOPEN"
-//		}
-//		else
-//			distOPEN_flag = true;
+		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, RESET);	//Убираем флаг "mcuCLOSE"
+		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, SET);		//Выставляем флаг "mcuOPEN"
 	}
 	//Флаг того что привод дошел до конца "CLOSEmcu"
 	else if (GPIO_Pin == GPIO_PIN_11)
@@ -541,7 +525,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			SendStr("[111] - CLOSEmcu\n");
 		#endif
 		Stop = true;
-//		CLOSEmcu_flag = true;
 	}
 	//Флаг того что привод дошел до начала "OPENmcu"
 	else if (GPIO_Pin == GPIO_PIN_12)
@@ -550,7 +533,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			SendStr("[112] - OPENmcu\n");
 		#endif
 		Stop = true;
-//		OPENmcu_flag = true;
 	}
 	//Пришла команда "Закрыть" с дистанционного пульта управления (distCLOSE)
 	else if ((GPIO_Pin == GPIO_PIN_13) && distCLOSE_flag)
@@ -560,16 +542,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		#endif
 		distCLOSE_flag = false;
 
-//		if((GPIOA->IDR & CLOSEmcu_Pin) != 0)
-//		{
-			Reverse = true;
+		Reverse = true;
 
-			//Здесь наверное нужно моргать
-			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, RESET);	//Убираем флаг "mcuOPEN"
-			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, SET);		//Выставляем флаг "mcuCLOSE"
-//		}
-//		else
-//			distCLOSE_flag = true;
+		//Здесь наверное нужно моргать
+		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, RESET);	//Убираем флаг "mcuOPEN"
+		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, SET);		//Выставляем флаг "mcuCLOSE"
 	}
 	//Пришла команда "Остановить" с дистанционного пульта управления (distSTOP)
 	else if ((GPIO_Pin == GPIO_PIN_14) && distSTOP_flag)
@@ -597,15 +574,25 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
     if(hadc->Instance == ADC1)	//Убрать все из колбека
     {
-    	What_Time++;
-    	BlinkFail++;
+		cnt++;
 
+		if(PhUncorrect)
+		{
+			BlinkFail++;
+		}
+		if(!display_Sleep)
+		{
+	    	What_Time++;
+		}
     	if(InitFlag)
+    	{
     		BlinkQueue++;
-
-    	if(test_flag)
-    		cnt++;
-//    	adcValue[0] += ConversionADC((uint16_t)adc[0]);
+    	}
+    	if(EnoughFlag)
+    	{
+    		CNTQueue++;
+    	}
+//    	  adcValue[0] += ConversionADC((uint16_t)adc[0]);
 //        adcValue[1] += ConversionADC((uint16_t)adc[1]);
 //        adcValue[2] += ConversionADC((uint16_t)adc[2]);
 
@@ -621,16 +608,14 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
         	HAL_GPIO_TogglePin(GPIOA, mcuFAIL_Pin);	//Чередования фаз не прямое
         	BlinkFail = 0;
         }
-        if(BlinkQueue == 1000)	//Раз в 3 секунды проверяет правильность расключения фаз
+        if(BlinkQueue == 1000)	//Через 3 секунды проверяет правильность расключения фаз
         {
-        	test_flag = false;
+        	EnoughFlag = false;
         	if(A < C && B > C)
         	{
 				#if DEBUG_USART
         			SendStr("PhOK\n");
 				#endif
-//        		HAL_GPIO_WritePin(GPIOA, mcuFAIL_Pin, RESET);	//Чередования фаз прямое
-//        		HAL_GPIO_WritePin(GPIOC, mcuREADY_Pin, SET);	//Статус, МК работает нормально
         		PhCorrect = true;
         		PhUncorrect = false;
         	}
@@ -639,7 +624,6 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 				#if DEBUG_USART
         			SendStr("PhNO\n");
 				#endif
-//        		HAL_GPIO_WritePin(GPIOC, mcuREADY_Pin, RESET);	//Статус выключаем, МК работает с ошибкой
         		PhCorrect = false;
         		PhUncorrect = true;
         	}
