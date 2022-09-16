@@ -180,7 +180,8 @@ void DirectionMove(void)
 
 //		OpenBlink = false;
 //		CloseBlink = false;
-
+		Forward = false;
+		Reverse = false;
 		Stop = false;
 	}
 }

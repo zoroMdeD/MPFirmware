@@ -377,20 +377,16 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		#if DEBUG_USART
 			SendStr("[102] - handOPEN is action\n");
 		#endif
+
 		handOPEN_flag = false;
 
-//		CloseBlink = false;
-//		OpenBlink = true;
+		HAL_GPIO_WritePin(GPIOC, mcuCLOSE_Pin, RESET);	//Убираем флаг "mcuCLOSE"
+		HAL_GPIO_WritePin(GPIOC, mcuOPEN_Pin, SET);		//Выставляем флаг "mcuOPEN"
 
-//		if((GPIOA->IDR & OPENmcu_Pin) != 0)
-//		{
-			Forward = true;
-
-			HAL_GPIO_WritePin(GPIOC, mcuCLOSE_Pin, RESET);	//Убираем флаг "mcuCLOSE"
-			HAL_GPIO_WritePin(GPIOC, mcuOPEN_Pin, SET);		//Выставляем флаг "mcuOPEN"
-//		}
-//		else
-//			handOPEN_flag = true;
+		/*
+		 * Если OPENmcu_Pin единица то ничего не делаем, значит мы уже в упоре
+		 */
+		((GPIOA->IDR & OPENmcu_Pin) == 0) ? (Forward = true) : (Stop = true);
 	}
 	//Пришла команда "Закрыть" с местного пульта управления (handCLOSE)
 	else if ((GPIO_Pin == GPIO_PIN_2) && handCLOSE_flag)
@@ -398,25 +394,19 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		#if DEBUG_USART
 			SendStr("[103] - handCLOSE is action\n");
 		#endif
+
 		handCLOSE_flag = false;
 
-//		OpenBlink = false;
-//		CloseBlink = true;
+		HAL_GPIO_WritePin(GPIOC, mcuOPEN_Pin, RESET);	//Убираем флаг "mcuOPEN"
+		HAL_GPIO_WritePin(GPIOC, mcuCLOSE_Pin, SET);	//Выставляем флаг "mcuCLOSE"
 
-//		if((GPIOA->IDR & CLOSEmcu_Pin) != 0)
-//		{
-			Reverse = true;
-
-			HAL_GPIO_WritePin(GPIOC, mcuOPEN_Pin, RESET);	//Убираем флаг "mcuOPEN"
-			HAL_GPIO_WritePin(GPIOC, mcuCLOSE_Pin, SET);	//Выставляем флаг "mcuCLOSE"
-//		}
-//		else
-//			handCLOSE_flag = true;
+		/*
+		 * Если CLOSEmcu_Pin единица то ничего не делаем, значит мы уже в упоре
+		 */
+		((GPIOA->IDR & CLOSEmcu_Pin) == 0) ? (Reverse = true) : (Stop = true);
 	}
 
-
 	//----------------------------------------------------------РАБОТА ФАЗ----------------------------------------------------------
-
 
 	//Переход через ноль на фазе "А"
 	else if (GPIO_Pin == GPIO_PIN_3)
@@ -501,9 +491,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		}
 	}
 
-
 	//------------------------------------------------------------------------------------------------------------------------------
-
 
 	//Пришла команда "Открыть" с дистанционного пульта управления (distOPEN)
 	else if ((GPIO_Pin == GPIO_PIN_8) && distOPEN_flag)
@@ -513,10 +501,10 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		#endif
 		distOPEN_flag = false;
 
-		Forward = true;
-
 		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, RESET);	//Убираем флаг "mcuCLOSE"
 		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, SET);		//Выставляем флаг "mcuOPEN"
+
+		((GPIOA->IDR & OPENmcu_Pin) == 0) ? (Forward = true) : (Stop = true);
 	}
 	//Флаг того что привод дошел до конца "CLOSEmcu"
 	else if (GPIO_Pin == GPIO_PIN_11)
@@ -542,11 +530,10 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		#endif
 		distCLOSE_flag = false;
 
-		Reverse = true;
-
-		//Здесь наверное нужно моргать
 		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, RESET);	//Убираем флаг "mcuOPEN"
 		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, SET);		//Выставляем флаг "mcuCLOSE"
+
+		((GPIOA->IDR & CLOSEmcu_Pin) == 0) ? (Reverse = true) : (Stop = true);
 	}
 	//Пришла команда "Остановить" с дистанционного пульта управления (distSTOP)
 	else if ((GPIO_Pin == GPIO_PIN_14) && distSTOP_flag)
@@ -560,10 +547,15 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 //	//Пришла команда "Передать управление плате расширения" с дистанционного пульта управления (distINT)
 //	else if ((GPIO_Pin == GPIO_PIN_15) && distINT_flag)
 //	{
+//		#if DEBUG_USART
+//			SendStr("[115] - distINT\n");
+//		#endif
 //		distINT_flag = false;
 //		Interface = true;
 //
-//		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, SET);	//Выставляем флаг "mcuINT", управление передано внешним интерфейсам
+//		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, RESET);	//Убираем флаг "mcuCLOSE"
+//		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, RESET);	//Выставляем флаг "mcuOPEN"
+//		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, SET);		//Выставляем флаг "mcuINT", управление передано внешним интерфейсам
 //	}
 	else
 	{
