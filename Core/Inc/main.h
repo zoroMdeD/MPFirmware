@@ -234,7 +234,7 @@ void Error_Handler(void);
 #define CREV_Pin GPIO_PIN_9
 #define CREV_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
-#define DEBUG_USART		1				//Отладка через USART 1 - Вкл; 0 - Выкл
+#define DEBUG_USART		0				//Отладка через USART 1 - Вкл; 0 - Выкл
 //------------------------UPD_Firmware------------------------
 #define FW_CRC32_OK		"OK"			//Контрольная сумма совпала, пакет данных цел
 #define FW_CRC32_ERR	"ERROR"			//Ошибка передачи пакета данных(необходимо повторить посылку пакета)

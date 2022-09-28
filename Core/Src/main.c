@@ -56,7 +56,7 @@ uint16_t DutyCicle = 7000;	//Уставка до какой скважности
 
 //Флаги срабатывания управляющих сигналов
 //---------------------------------------
-bool distHIGHP_flag = true;
+bool distHIGHP_flag = false;
 bool handOPEN_flag = false;
 bool handCLOSE_flag = false;
 bool distOPEN_flag = false;
@@ -68,9 +68,9 @@ bool distINT_flag = false;
 bool handCTRL_flag = false;
 
 //Флаги правильности подключения фаз
-uint8_t A = 0;
+uint8_t A = 1;
 uint8_t B = 3;
-uint8_t C = 0;
+uint8_t C = 2;
 bool PhCorrect = false;	//Флаг корректности фаз
 bool PhUncorrect = false;	//Флаг того что фазы не правильно включены
 uint8_t BlinkFail = 0;	//Переменная отсчета времени для моргания индикацией ошибки
@@ -206,6 +206,7 @@ int main(void)
 		distOPEN_flag = false;
 		distCLOSE_flag = false;
 		distSTOP_flag = false;
+		distHIGHP_flag = false;
 	//	  	distINT_flag = false;
 
 		handOPEN_flag = true;
@@ -219,6 +220,7 @@ int main(void)
 		distOPEN_flag = true;
 		distCLOSE_flag = true;
 		distSTOP_flag = true;
+		distHIGHP_flag = true;
 	//	  	distINT_flag = false;
 
 		handOPEN_flag = false;
@@ -358,7 +360,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		 *     	 Low			  Remote
 		 */
 		//Проверяем статус, с какого пульта идет управление (handCTRL)
-		if((GPIOC->IDR & GPIO_PIN_3) == 0)
+		if((GPIOC->IDR & handCTRL_Pin) == 0)
 		{
 			if(((GPIOB->IDR & GPIO_PIN_15) != 0) && ((GPIOB->IDR & GPIO_PIN_14) == 0))	//HIGHP_OPENmcu = 1; HIGHP_CLOSEmcu = 0;
 			{
@@ -411,7 +413,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	//Переход через ноль на фазе "А"
 	else if (GPIO_Pin == GPIO_PIN_3)
 	{
-		if(((GPIOB->IDR & B_ZeroCross_Pin) == 0) && ((GPIOB->IDR & C_ZeroCross_Pin) == 0) && A == 0)
+		if(/*((GPIOB->IDR & B_ZeroCross_Pin) == 0) && */((GPIOB->IDR & C_ZeroCross_Pin) == 0) && A == 0)
 		{
 			#if DEBUG_USART
 				SendStr("[301] - A\n");
@@ -419,7 +421,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			A = 1;
 			CNTQueue = 0;
 		}
-		if(DirMove_OPENmcu && ((GPIOA->IDR & OPENmcu_Pin) != 0))
+		if(DirMove_OPENmcu && ((GPIOA->IDR & OPENmcu_Pin) == 0))
 		{
 			#if DEBUG_USART
 				SendStr("[104] - AFWD\n");
@@ -427,7 +429,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);	//Stop timer two channel one	(AFWD)
 			HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);	//Run timer two channel one		(AFWD)
 		}
-		else if(DirMove_CLOSEmcu && ((GPIOA->IDR & CLOSEmcu_Pin) != 0))
+		else if(DirMove_CLOSEmcu && ((GPIOA->IDR & CLOSEmcu_Pin) == 0))
 		{
 			#if DEBUG_USART
 				SendStr("[105] - AREV\n");
@@ -436,7 +438,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);	//Run timer two channel four	(AREV)
 		}
 	}
-	 //Переход через ноль на фазе "B"
+	//Переход через ноль на фазе "B"
 	else if (GPIO_Pin == GPIO_PIN_5)
 	{
 		if((CNTQueue == 2) &&  B == 0)
@@ -446,7 +448,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 				SendStr("[303] - B\n");
 			#endif
 		}
-		if(DirMove_OPENmcu && ((GPIOA->IDR & OPENmcu_Pin) != 0))
+		if(DirMove_OPENmcu && ((GPIOA->IDR & OPENmcu_Pin) == 0))
 		{
 			#if DEBUG_USART
 				SendStr("[106] - BFWD\n");
@@ -454,7 +456,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);	//Stop timer three channel one	(BFWD)
 			HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);	//Run timer three channel one	(BFWD)
 		}
-		else if(DirMove_CLOSEmcu && ((GPIOA->IDR & CLOSEmcu_Pin) != 0))
+		else if(DirMove_CLOSEmcu && ((GPIOA->IDR & CLOSEmcu_Pin) == 0))
 		{
 			#if DEBUG_USART
 				SendStr("[107] - BFWD\n");
@@ -473,7 +475,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 				SendStr("[302] - C\n");
 			#endif
 		}
-		if(DirMove_OPENmcu && ((GPIOA->IDR & OPENmcu_Pin) != 0))
+		if(DirMove_OPENmcu && ((GPIOA->IDR & OPENmcu_Pin) == 0))
 		{
 			#if DEBUG_USART
 				SendStr("[108] - CFWD\n");
@@ -481,7 +483,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_1);	//Stop timer Four channel one	(CFWD)
 			HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);	//Run timer four channel one	(CFWD)
 		}
-		else if(DirMove_CLOSEmcu && ((GPIOA->IDR & CLOSEmcu_Pin) != 0))
+		else if(DirMove_CLOSEmcu && ((GPIOA->IDR & CLOSEmcu_Pin) == 0))
 		{
 			#if DEBUG_USART
 				SendStr("[109] - CREV\n");
@@ -597,7 +599,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 //        }
         if(BlinkFail == 250 && PhUncorrect)	//Раз в 0.75 секунды индикация ошибки(Чередование фаз не прямое)
         {
-        	HAL_GPIO_TogglePin(GPIOA, mcuFAIL_Pin);	//Чередования фаз не прямое
+        	HAL_GPIO_TogglePin(GPIOC, mcuREADY_Pin);	//Чередования фаз не прямое
         	BlinkFail = 0;
         }
         if(BlinkQueue == 1000)	//Через 3 секунды проверяет правильность расключения фаз
@@ -618,6 +620,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 				#endif
         		PhCorrect = false;
         		PhUncorrect = true;
+        		InitFlag = false;
         	}
         	BlinkQueue = 0;
         }

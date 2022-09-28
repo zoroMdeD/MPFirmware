@@ -17,6 +17,7 @@ extern bool handCLOSE_flag;
 extern bool distOPEN_flag;
 extern bool distCLOSE_flag;
 extern bool distSTOP_flag;
+extern bool distHIGHP_flag;
 
 extern bool SELF_CAPTURE_flag;
 extern bool handCTRL_flag;
@@ -82,7 +83,7 @@ void DirectionMove(void)
 		HAL_Delay(1000);
 
 		//Запускаем таймеры на открытие
-		if((GPIOA->IDR & OPENmcu_Pin) != 0)
+		if((GPIOA->IDR & OPENmcu_Pin) == 0)
 		{
 			#if DEBUG_USART
 				SendStr("[14] - Run timers is opening\n");
@@ -128,7 +129,7 @@ void DirectionMove(void)
 		HAL_Delay(1000);
 
 		//Запускаем таймеры на закрытие
-		if((GPIOA->IDR & CLOSEmcu_Pin) != 0)
+		if((GPIOA->IDR & CLOSEmcu_Pin) == 0)
 		{
 			#if DEBUG_USART
 				SendStr("[18] - Run timers is closing\n");
@@ -176,6 +177,8 @@ void DirectionMove(void)
 			#endif
 			distOPEN_flag = true;
 			distCLOSE_flag = true;
+			distSTOP_flag = true;
+			distHIGHP_flag = true;
 		}
 
 //		OpenBlink = false;
@@ -205,6 +208,7 @@ void ManagementProcess(void)
 		distOPEN_flag = false;
 		distCLOSE_flag = false;
 		distSTOP_flag = false;
+		distHIGHP_flag = false;	//Если надо чтобы при любой настройке работала это кнопка то надо "true"
 //	  	distINT_flag = false;
 
 		handOPEN_flag = true;
@@ -225,6 +229,7 @@ void ManagementProcess(void)
 		distOPEN_flag = true;
 		distCLOSE_flag = true;
 		distSTOP_flag = true;
+		distHIGHP_flag = true;
 //	  	distINT_flag = true;
 
 		#if DEBUG_USART
@@ -280,7 +285,7 @@ void DutyCycleProcess(void)
 	 * если флаг направления движения выставлен,
 	 * и кулачковый концевик не замкнут
 	 */
-	if((Compare > DutyCicle) && DirMove_OPENmcu && ((GPIOA->IDR & OPENmcu_Pin) != 0))
+	if((Compare > DutyCicle) && DirMove_OPENmcu && ((GPIOA->IDR & OPENmcu_Pin) == 0))
 	{
 		#if DEBUG_USART
 			if(Compare == 9001)
@@ -293,7 +298,7 @@ void DutyCycleProcess(void)
 		Compare = Compare - 5;
 		HAL_Delay(10);	//Вопрос нужна ли задержка, и какая узнать подробней !!!
 	}
-	else if((Compare > DutyCicle) && DirMove_CLOSEmcu && ((GPIOA->IDR & CLOSEmcu_Pin) != 0))
+	else if((Compare > DutyCicle) && DirMove_CLOSEmcu && ((GPIOA->IDR & CLOSEmcu_Pin) == 0))
 	{
 		#if DEBUG_USART
 			if(Compare == 9001)
