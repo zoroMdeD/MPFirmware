@@ -1,4 +1,4 @@
-../Core/fatfs/Src/sd_cmd.c:32:6:MyInitCard	8	static
+../Core/fatfs/Src/sd_cmd.c:32:9:MyInitCard	8	static
 ../Core/fatfs/Src/sd_cmd.c:38:6:MyReadFile	96	static
 ../Core/fatfs/Src/sd_cmd.c:92:6:MyWriteFileJson	80	static
 ../Core/fatfs/Src/sd_cmd.c:120:6:CreateLogFile	4184	static

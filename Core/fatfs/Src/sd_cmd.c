@@ -29,10 +29,10 @@ UINT WriteBytes = 0;		//Счетчик кол-ва записанных данн
 extern bool LogFileCreate;
 
 //Функция инициализации карты памяти
-void MyInitCard(void)
+uint8_t MyInitCard(void)
 {
 //	SD_PowerOn();
-	sd_ini();
+	return sd_ini();
 }
 //Функция чтения файла с карты памяти
 void MyReadFile(void)

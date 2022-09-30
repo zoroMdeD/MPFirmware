@@ -73,8 +73,8 @@ uint8_t B = 3;
 uint8_t C = 2;
 bool PhCorrect = false;	//Флаг корректности фаз
 bool PhUncorrect = false;	//Флаг того что фазы не правильно включены
-uint8_t BlinkFail = 0;	//Переменная отсчета времени для моргания индикацией ошибки
-uint16_t BlinkQueue = 0;	//Переменная отсчета для определения очередности фаз
+uint16_t BlinkFail = 0;	//Переменная отсчета времени для моргания индикацией ошибки
+uint32_t BlinkQueue = 0;	//Переменная отсчета для определения очередности фаз
 
 bool InitFlag = true;	//Флаг инициализации переферии
 bool EnoughFlag = true;	//Флаг прерывания подсчета мс для определения очередности фаз
@@ -105,6 +105,7 @@ uint8_t Blink = 0;					//Счетчик времени для индикации
 uint16_t What_Time = 0;				//Счетчик времени на выполнение необходимых действий
 bool display_Off = false;			//Флаг состояния дисплея
 bool display_Sleep = false;			//Флаг того что дисплей в спящем режиме
+bool handleLCD = true;
 //-------------------------------------------
 //-----------------ADC-----------------------
 double Current = 0.0;				//Переменная значения выставленного тока
@@ -186,17 +187,36 @@ int main(void)
 	// Init lcd using one of the stm32HAL i2c typedefs
 	if (ssd1306_Init(&hi2c2) != 0)
 	{
-		Error_Handler();
+		handleLCD = false;
+		#if DEBUG_USART
+			SendStr("Init lcd -> no lcd\n");
+		#endif
+//		Error_Handler();
+	}
+	else
+	{
+		handleLCD = true;
+		#if DEBUG_USART
+			SendStr("Init lcd -> success\n");
+		#endif
 	}
 	//----------------ADC-----------------------
 	HAL_ADC_Start_DMA(&hadc1, (uint32_t*)&adc, 3);	//Стартуем АЦП
-	HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_1);
+//	HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_1);
 	//------------------------------------------
 	//---------------FATfs----------------------
-	MyInitCard();
-	#if DEBUG_USART
-		SendStr("Init sd card -> success\n");
-	#endif
+//	if(MyInitCard() != 0)
+//	{
+//		#if DEBUG_USART
+//			SendStr("Init sd card -> error\n");
+//		#endif
+//	}
+//	else
+//	{
+//		#if DEBUG_USART
+//			SendStr("Init sd card -> success\n");
+//		#endif
+//	}
 	//------------------------------------------
 
 	//Считываем значение с пина управления
@@ -238,8 +258,11 @@ int main(void)
 			SendStr("[4] - Self capture is reset\n");
 	#endif
 
+	HAL_Delay(2000);
+
 	#if REINIT
 		MX_GPIO_Init_Interrupt();
+		HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_1);
 	#endif
   /* USER CODE END 2 */
 
@@ -247,8 +270,10 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  DisplayInfo();		  //Придумать как заблокировать режим работы с дисплеем
-
+	  if(handleLCD)
+	  {
+		  DisplayInfo();		  //Придумать как заблокировать режим работы с дисплеем
+	  }
 	  if(PhCorrect)	//Проверяем правильность включение фаз
 	  {
 		  if(InitFlag)
@@ -258,24 +283,30 @@ int main(void)
 			  #endif
 
 			  InitFlag = false;
-			  #undef REINIT
-			  #define REINIT	0
+//			  #undef REINIT
+//			  #define REINIT	0
+
+			  HAL_GPIO_DeInit(A_ZeroCross_GPIO_Port, A_ZeroCross_Pin);
+			  HAL_GPIO_DeInit(B_ZeroCross_GPIO_Port, B_ZeroCross_Pin);
+			  HAL_GPIO_DeInit(C_ZeroCross_GPIO_Port, C_ZeroCross_Pin);
 
 			  MX_GPIO_Init();
 			  MX_TIM2_Init();
 			  MX_TIM3_Init();
 			  MX_TIM4_Init();
 
+			 HAL_Delay(1000);
+
 			  #if DEBUG_USART
 			  	  SendStr("Timers init\n");
 			  #endif
 			  	HAL_GPIO_WritePin(GPIOC, mcuREADY_Pin, SET);	//Статус, МК работает нормально
 		  }
-		  ManagementProcess();
-		  SelfCaptureProcess();
-		  DutyCycleProcess();
-
-		  DirectionMove();
+//		  ManagementProcess();
+//		  SelfCaptureProcess();
+//		  DutyCycleProcess();
+//
+//		  DirectionMove();
 //		  СurrentСomparison();
 
 //		  adcValue[0] += ConversionADC((uint16_t)adc[0]);
@@ -597,7 +628,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 //        	else if(CloseBlink)
 //        	    HAL_GPIO_TogglePin(GPIOC, mcuCLOSE_Pin);	//Статус, задвижка закрывается(мигание)
 //        }
-        if(BlinkFail == 250 && PhUncorrect)	//Раз в 0.75 секунды индикация ошибки(Чередование фаз не прямое)
+        if(BlinkFail == 333 && PhUncorrect)	//Раз в 0.999 секунды индикация ошибки(Чередование фаз не прямое)
         {
         	HAL_GPIO_TogglePin(GPIOC, mcuREADY_Pin);	//Чередования фаз не прямое
         	BlinkFail = 0;

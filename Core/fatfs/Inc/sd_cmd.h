@@ -10,7 +10,7 @@
 
 #include "main.h"
 
-void MyInitCard(void);
+uint8_t MyInitCard(void);
 void MyReadFile(void);
 void MyWriteFileJson(char *path, char *text);
 char *MyWriteFileFirmware(char *name, char *data_bytes, uint32_t crc32);

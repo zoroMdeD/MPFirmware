@@ -288,27 +288,27 @@ void DutyCycleProcess(void)
 	if((Compare > DutyCicle) && DirMove_OPENmcu && ((GPIOA->IDR & OPENmcu_Pin) == 0))
 	{
 		#if DEBUG_USART
-			if(Compare == 9001)
+			if(Compare == 9000)
 				SendStr("[9] - Opening mode\n");
 		#endif
 
 		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, Compare);
 		__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, Compare);
 		__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_1, Compare);
-		Compare = Compare - 5;
+		Compare = Compare - 10;
 		HAL_Delay(10);	//Вопрос нужна ли задержка, и какая узнать подробней !!!
 	}
 	else if((Compare > DutyCicle) && DirMove_CLOSEmcu && ((GPIOA->IDR & CLOSEmcu_Pin) == 0))
 	{
 		#if DEBUG_USART
-			if(Compare == 9001)
+			if(Compare == 9000)
 				SendStr("[10] - Closing mode\n");
 		#endif
 
 		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, Compare);
 		__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, Compare);
 		__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_4, Compare);
-		Compare = Compare - 5;
+		Compare = Compare - 10;
 		HAL_Delay(10);	//Вопрос нужна ли задержка, и какая узнать подробней !!!
 	}
 }
