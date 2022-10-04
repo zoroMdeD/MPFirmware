@@ -202,21 +202,21 @@ int main(void)
 	}
 	//----------------ADC-----------------------
 	HAL_ADC_Start_DMA(&hadc1, (uint32_t*)&adc, 3);	//Стартуем АЦП
-//	HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_1);
+	HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_1);
 	//------------------------------------------
 	//---------------FATfs----------------------
-//	if(MyInitCard() != 0)
-//	{
-//		#if DEBUG_USART
-//			SendStr("Init sd card -> error\n");
-//		#endif
-//	}
-//	else
-//	{
-//		#if DEBUG_USART
-//			SendStr("Init sd card -> success\n");
-//		#endif
-//	}
+	if(MyInitCard() != 0)
+	{
+		#if DEBUG_USART
+			SendStr("Init sd card -> error\n");
+		#endif
+	}
+	else
+	{
+		#if DEBUG_USART
+			SendStr("Init sd card -> success\n");
+		#endif
+	}
 	//------------------------------------------
 
 	//Считываем значение с пина управления
@@ -262,7 +262,7 @@ int main(void)
 
 	#if REINIT
 		MX_GPIO_Init_Interrupt();
-		HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_1);
+//		HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_1);
 	#endif
   /* USER CODE END 2 */
 
@@ -302,11 +302,11 @@ int main(void)
 			  #endif
 			  	HAL_GPIO_WritePin(GPIOC, mcuREADY_Pin, SET);	//Статус, МК работает нормально
 		  }
-//		  ManagementProcess();
-//		  SelfCaptureProcess();
-//		  DutyCycleProcess();
-//
-//		  DirectionMove();
+		  ManagementProcess();
+		  SelfCaptureProcess();
+		  DutyCycleProcess();
+
+		  DirectionMove();
 //		  СurrentСomparison();
 
 //		  adcValue[0] += ConversionADC((uint16_t)adc[0]);
