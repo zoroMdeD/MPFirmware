@@ -49,9 +49,17 @@ void DirectionMove(void)
 		 */
 
 		//Останавливаем таймеры на закрытие
-		HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_4);	//Stop timer two channel four	(AREV)
-		HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);	//Stop timer three channel one	(BFWD)
-		HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_4);	//Stop timer four channel four	(CREV)
+//		HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_4);	//Stop timer two channel four	(AREV)
+//		HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);	//Stop timer three channel one	(BFWD)
+//		HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_4);	//Stop timer four channel four	(CREV)
+
+			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);	//Stop timer two channel one	(AFWD)
+			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_4);	//Stop timer two channel four	(AREV)
+
+			HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);	//Stop timer three channel one	(BFWD)
+
+			HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_1);	//Stop timer Four channel one	(CFWD)
+			HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_4);	//Stop timer four channel four	(CREV)
 
 		DirMove_CLOSEmcu = false;
 		Forward = false;
@@ -80,7 +88,7 @@ void DirectionMove(void)
 		 * Возможно нужно поставить задержку для исключения одновременной работы таймеров
 		 * на открытие и закрытие
 		 */
-		HAL_Delay(1000);
+		HAL_Delay(500);
 
 		//Запускаем таймеры на открытие
 		if((GPIOA->IDR & OPENmcu_Pin) == 0)
@@ -100,9 +108,17 @@ void DirectionMove(void)
 			SendStr("[15] - Reverse is action\n");
 		#endif
 		//Останавливаем таймеры на открытие
-		HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);	//Stop timer two channel one	(AFWD)
-		HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);	//Stop timer three channel one	(BFWD)
-		HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_1);	//Stop timer Four channel one	(CFWD)
+//		HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);	//Stop timer two channel one	(AFWD)
+//		HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);	//Stop timer three channel one	(BFWD)
+//		HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_1);	//Stop timer Four channel one	(CFWD)
+
+			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);	//Stop timer two channel one	(AFWD)
+			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_4);	//Stop timer two channel four	(AREV)
+
+			HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);	//Stop timer three channel one	(BFWD)
+
+			HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_1);	//Stop timer Four channel one	(CFWD)
+			HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_4);	//Stop timer four channel four	(CREV)
 
 		DirMove_OPENmcu = false;
 		Reverse = false;
@@ -126,7 +142,7 @@ void DirectionMove(void)
 
 		Compare = 9001;
 
-		HAL_Delay(1000);
+		HAL_Delay(500);
 
 		//Запускаем таймеры на закрытие
 		if((GPIOA->IDR & CLOSEmcu_Pin) == 0)
@@ -288,7 +304,7 @@ void DutyCycleProcess(void)
 	if((Compare > DutyCicle) && DirMove_OPENmcu && ((GPIOA->IDR & OPENmcu_Pin) == 0))
 	{
 		#if DEBUG_USART
-			if(Compare == 9000)
+			if(Compare == 9001)
 				SendStr("[9] - Opening mode\n");
 		#endif
 
@@ -296,12 +312,12 @@ void DutyCycleProcess(void)
 		__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, Compare);
 		__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_1, Compare);
 		Compare = Compare - 10;
-		HAL_Delay(10);	//Вопрос нужна ли задержка, и какая узнать подробней !!!
+		HAL_Delay(5);	//Вопрос нужна ли задержка, и какая узнать подробней !!!
 	}
 	else if((Compare > DutyCicle) && DirMove_CLOSEmcu && ((GPIOA->IDR & CLOSEmcu_Pin) == 0))
 	{
 		#if DEBUG_USART
-			if(Compare == 9000)
+			if(Compare == 9001)
 				SendStr("[10] - Closing mode\n");
 		#endif
 
@@ -309,6 +325,6 @@ void DutyCycleProcess(void)
 		__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, Compare);
 		__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_4, Compare);
 		Compare = Compare - 10;
-		HAL_Delay(10);	//Вопрос нужна ли задержка, и какая узнать подробней !!!
+		HAL_Delay(5);	//Вопрос нужна ли задержка, и какая узнать подробней !!!
 	}
 }

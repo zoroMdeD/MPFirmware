@@ -1,4 +1,4 @@
 ../Core/periphery_io/Src/cmd.c:36:6:DirectionMove	8	static
-../Core/periphery_io/Src/cmd.c:191:6:ManagementProcess	4	static
-../Core/periphery_io/Src/cmd.c:240:6:SelfCaptureProcess	4	static
-../Core/periphery_io/Src/cmd.c:281:6:DutyCycleProcess	8	static
+../Core/periphery_io/Src/cmd.c:207:6:ManagementProcess	4	static
+../Core/periphery_io/Src/cmd.c:256:6:SelfCaptureProcess	4	static
+../Core/periphery_io/Src/cmd.c:297:6:DutyCycleProcess	8	static
