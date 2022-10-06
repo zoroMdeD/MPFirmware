@@ -208,7 +208,7 @@ void ManagementProcess(void)
 		distOPEN_flag = false;
 		distCLOSE_flag = false;
 		distSTOP_flag = false;
-		distHIGHP_flag = false;	//Если надо чтобы при любой настройке работала это кнопка то надо "true"
+		distHIGHP_flag = false;	//Если надо чтобы при любой настройке работала эта кнопка то надо "true"
 //	  	distINT_flag = false;
 
 		handOPEN_flag = true;

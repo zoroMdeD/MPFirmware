@@ -71,6 +71,7 @@ bool handCTRL_flag = false;
 uint8_t A = 1;
 uint8_t B = 3;
 uint8_t C = 2;
+
 bool PhCorrect = false;	//Флаг корректности фаз
 bool PhUncorrect = false;	//Флаг того что фазы не правильно включены
 uint16_t BlinkFail = 0;	//Переменная отсчета времени для моргания индикацией ошибки
@@ -202,7 +203,7 @@ int main(void)
 	}
 	//----------------ADC-----------------------
 	HAL_ADC_Start_DMA(&hadc1, (uint32_t*)&adc, 3);	//Стартуем АЦП
-	HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_1);
+//	HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_1);
 	//------------------------------------------
 	//---------------FATfs----------------------
 	if(MyInitCard() != 0)
@@ -262,7 +263,7 @@ int main(void)
 
 	#if REINIT
 		MX_GPIO_Init_Interrupt();
-//		HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_1);
+		HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_1);
 	#endif
   /* USER CODE END 2 */
 
@@ -444,7 +445,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	//Переход через ноль на фазе "А"
 	else if (GPIO_Pin == GPIO_PIN_3)
 	{
-		if(/*((GPIOB->IDR & B_ZeroCross_Pin) == 0) && */((GPIOB->IDR & C_ZeroCross_Pin) == 0) && A == 0)
+		if(((GPIOB->IDR & B_ZeroCross_Pin) == 0) && ((GPIOB->IDR & C_ZeroCross_Pin) == 0) && A == 0)
 		{
 			#if DEBUG_USART
 				SendStr("[301] - A\n");
@@ -651,7 +652,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 				#endif
         		PhCorrect = false;
         		PhUncorrect = true;
-        		InitFlag = false;
+//        		InitFlag = false;
         	}
         	BlinkQueue = 0;
         }
